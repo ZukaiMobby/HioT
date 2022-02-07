@@ -11,24 +11,21 @@ from HioT.Routers import user as route_user
 app = FastAPI()
 
 
-@app.get('/', status_code=200)
-async def app_welcome():
+@app.get('/', tags=['root'])
+async def app_welcome() -> str:
     """ Uvicorn 欢迎页面 """
     return "Welcome to HioT platform"
 
 
-@app.get('/favicon.ico')
+@app.get('/favicon.ico', tags=['root'])
 async def favicon() -> FileResponse:
     """ 返回网站图标（就是玩.jpg） """
     return FileResponse('./HioT/imgs/favicorn.ico')
 
 app.include_router(route_device.router)
 app.include_router(route_user.router)
-
-# app.include_router(route_sdk.router)
-# app.include_router(route_setting.router)
-
-
+app.include_router(route_sdk.router)
+app.include_router(route_setting.router)
 
 
 if __name__ == '__main__':

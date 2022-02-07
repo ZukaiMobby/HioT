@@ -30,4 +30,5 @@ def check_influxdb():
 
 
 def check_for_initialize():
-    check_files_db()
+    check_files_db() #检查文件完整性
+    #检查是否初次运行
