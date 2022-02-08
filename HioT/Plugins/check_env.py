@@ -2,7 +2,8 @@ import os
 import platform
 from HioT.Plugins.get_config import *
 from HioT.Plugins.get_logger import logger, log_handler
-#需要通过调用来运行，不得单独调用
+# 需要通过调用来运行，不得单独调用
+
 
 @log_handler
 def check_files_db():
@@ -30,5 +31,5 @@ def check_influxdb():
 
 
 def check_for_initialize():
-    check_files_db() #检查文件完整性
-    #检查是否初次运行
+    check_files_db()  # 检查文件完整性
+    # 检查是否初次运行
