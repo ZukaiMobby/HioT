@@ -1,3 +1,4 @@
+from types import NoneType
 from typing import List
 from sqlalchemy import Column, Integer, String
 
@@ -33,8 +34,8 @@ def add_user_to_db(user_model: dict) -> bool:
     """ 从User模型中抽取设备列表并转换到字符串并插入数据库 """
     if user_model['uid'] == None:
         #新建一个用户
-        
-        user_model['devices'] = " ".join(map(str,user_model['devices']))
+        if user_model['devices']:
+            user_model['devices'] = " ".join(map(str,user_model['devices']))
         the_user = ORMUser(**user_model)
         logger.debug("添加前： "+str(the_user))
         session.add(the_user)

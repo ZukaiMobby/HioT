@@ -15,10 +15,11 @@ global:
     log_file_path: './logs/main.log'
 
 influxDB:
-    host: 'localhost'
-    port: '8086'
-    #path当为Windows平台时才会生效,指明可执行文件存在路径
-    path: './Env/influxdb'
+    #Please DO NOT change this if you were not know what you are doing
+    url: 'http://localhost:8086'
+    token: 'ncIqga-goxVfMc3IjrfphDJtgwoCoP2UU0PkNRfN-IpALyyhKsTHJDOW5PJ7AvVoy0OcUtvlFVVAscj28Dthpg=='
+    bucket: "HioT"
+    org: "HioT"
 
 uvicorn:
     host: '0.0.0.0'
