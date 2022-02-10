@@ -2,26 +2,11 @@
 import json
 from types import NoneType
 
-from typing import List
+from typing import List, Tuple
 from sqlalchemy import Column, Integer, String, Boolean
 
 from HioT.Database.sqliteDB import OrmBase, session, engine
 from HioT.Plugins.get_logger import log_handler, logger
-
-#from rich import print
-
-# class ModelDevice(BaseModel):
-#     #这是具体的某一个设备
-#     did:Optional[int] #设备全局唯一的设备号
-#     device_type_id:int #设备所属类型
-#     bind_user:Optional[int] #绑定的用户UID
-
-#     device_name: Optional[str] #设备名称
-#     device_description: Optional[str] #设备描述
-
-#     config:Optional[dict] #针对某一个设备的配置，存储时应为json
-#     data_item: Optional[dict] #设备当前的具体数值，存储时应为json
-
 
 class ORMDevice(OrmBase):
     # 设备实例存储位置，其中的数据应该是为当前值
@@ -39,7 +24,7 @@ class ORMDevice(OrmBase):
     data_item = Column(String)  # 应为序列化之后的json
 
     def __str__(self) -> str:
-        return f"设备ID: {self.did}设备名称: {self.device_name}设备绑定用户: {self.bind_user}设备描述: {self.device_description}"
+        return f"设备ID: {self.did} 设备名称: {self.device_name} 设备绑定用户: {self.bind_user} 设备描述: {self.device_description}"
 
 
 OrmBase.metadata.create_all(engine)
@@ -48,8 +33,8 @@ OrmBase.metadata.create_all(engine)
 ###############验证类函数开始################
 
 def check_old_new_data_item(old: dict, new: dict, did: int) -> bool:
-    print(old)
-    print(new)
+    # print(old)
+    # print(new)
     if len(old) != len(new):
         logger.error(f"设备ID: {did} 数据项修改出错：数据元素个数不匹配")
         return False
@@ -182,7 +167,7 @@ def update_device_data_item_to_db(device_model:dict) -> bool:
 
 
 @log_handler
-def update_device_status_to_db(device_model: dict) -> bool:
+def update_device_status_to_db(device_model: dict,immediate_commit = True ) -> bool:
 
     did = device_model['did']
     if not type(did) == int:
@@ -198,12 +183,16 @@ def update_device_status_to_db(device_model: dict) -> bool:
         logger.error(f"设备DID: {did} 不得修改设备类型")
         return False
 
-    the_device.bind_user = device_model['bind_user']
+    the_device.bind_user = device_model['bind_user'] #这里需要把列表重新序列化
     the_device.device_description = device_model['device_description']
     the_device.device_name = device_model['device_name']
     the_device.online = device_model['online']
-    session.commit()
-    logger.info(f"设备DID: {did} 状态已更新")
+    
+    if immediate_commit:
+        session.commit()
+        logger.info(f"设备DID: {did} 状态已更新")
+    else:
+        logger.info(f"设备DID: {did} 状态更新已缓存")
     return True
 
 
@@ -249,14 +238,18 @@ def delete_device_from_db(did: int) -> bool:
     else:
         logger.error(f"请求删除的设备：{did} 失败，请检查")
         return False
-    
 
+@log_handler
 
-
-
+def get_device_not_bind_with_user():
+    #返回列表【（设备ID，设备类型ID）】
+    the_devices: List[ORMDevice] = session.query(ORMDevice).filter(ORMDevice.bind_user == None)
+    res = []
+    for device in the_devices:
+        res.append((device.did,device.device_type_id))
+    return res
 
 if __name__ == '__main__':
     # 代码临时测试区
-
-
+    print(get_device_not_bind_with_user())
     pass

@@ -1,6 +1,7 @@
 from types import NoneType
 from typing import List
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.sql import text
 
 from HioT.Database.sqliteDB import OrmBase,session,engine
 from HioT.Plugins.get_logger import log_handler, logger
@@ -53,8 +54,11 @@ def get_user_from_db_by_id(uid: int) -> dict:
     the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == uid).first()
     if not the_user:
         return {}
-    the_user.devices = the_user.devices.split()
-    the_user.devices = list(map(int,the_user.devices))
+    if type(the_user.devices) == str:
+        the_user.devices = the_user.devices.split()
+        the_user.devices = list(map(int,the_user.devices))
+    else:
+        pass
     the_user_in_dict = {
         "uid":the_user.uid,
         "name":the_user.name,
@@ -64,6 +68,16 @@ def get_user_from_db_by_id(uid: int) -> dict:
     }
     return the_user_in_dict
 
+@log_handler
+def get_all_user_uid_from_db() -> List:
+
+    #直接去生成全部的用户实例效率太低，使用RAW SQL查询列表
+    with engine.connect() as con:
+        result_raw = con.execute('SELECT uid FROM users')
+        results = []
+        for item in result_raw:
+            results.append(item[0])
+    return results
 
 @log_handler
 def update_user_to_db(user_model) -> bool:
@@ -87,9 +101,7 @@ def update_user_to_db(user_model) -> bool:
 
         session.commit() #提交修改
         return True
-        
-    
-
+      
 
 @log_handler
 def delete_user_from_db(uid: int) -> bool:
@@ -112,4 +124,5 @@ def delete_user_from_db(uid: int) -> bool:
 OrmBase.metadata.create_all(engine)
 if __name__ == '__main__':
     #文件测试区
+    print(get_all_user_uid_from_db())
     pass

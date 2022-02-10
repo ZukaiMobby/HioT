@@ -41,26 +41,22 @@ def influx_query_by_device(did):
     #返回数据所有历史数据
     with InfluxDBClient(url=url, token=token, org=org) as client:
         query_api = client.query_api()
-        query = ' from(bucket: "HioT") \
+        query = f' from(bucket: "HioT") \
         |> range(start: -1d) \
-        |> filter(fn: (r) => r["did"] == "1") '
+        |> filter(fn: (r) => r["did"] == "{did}") '
 
-        print(query)
         result = query_api.query(org=org, query=query)
         results = []
         for table in result:
             for record in table.records:
                 results.append((record.get_field(), record.get_value(), record.get_time()))
-    print(results)
+                #[(x,y,z),(...),(...)]
+    return results
 
-"""
-query = 'from(bucket: "HioT") |> range(start: -1h)'
-tables = client.query_api().query(query, org=org)
-for table in tables:
-    for record in table.records:
-        print(record)
 
-"""
 
 if __name__ == '__main__':
     pass
+    # influx_query_by_device(1)
+    # influx_query_by_device(4)
+    
