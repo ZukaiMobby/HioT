@@ -24,5 +24,6 @@ class ModelDevice(BaseModel):
     data_item: Optional[dict]  # 设备当前的具体数值，存储时应为json
 
 
+
 if __name__ == '__main__':
     pass

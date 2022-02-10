@@ -8,6 +8,8 @@ python-jose
 python-multipart
 colorful-logger
 influxdb-client
+paho-mqtt
+apscheduler
 #dev env 
 pylint
 pyyaml
