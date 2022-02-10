@@ -12,7 +12,7 @@ import yaml
 def load_config() -> Dict:
     """ 读取配置文件 """
     try:
-        with open('./config.yaml', 'r', encoding="utf-8") as file:
+        with open('./HioT.conf', 'r', encoding="utf-8") as file:
             config_raw = file.read()
     except FileNotFoundError:
         with default_logger:

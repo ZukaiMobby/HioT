@@ -45,26 +45,26 @@ def the_work():
     pass
 
 if __name__ == '__main__':
-    print("我是空调，要和服务器建立初次连接，我现在要初试配置")
-    print("有了配置我需要连接")
-    ##########以下内容需要通过FASTAPI接口完成###################
+    # print("我是空调，要和服务器建立初次连接，我现在要初试配置")
+    # print("有了配置我需要连接")
+    # ##########以下内容需要通过FASTAPI接口完成###################
     
-    from HioT.Models.device import ModelDevice
-    from HioT.ModelsORM.device_type import get_device_type_from_db_by_id
-    from HioT.ModelsORM.device import add_device_to_db
+    # from HioT.Models.device import ModelDevice
+    # from HioT.ModelsORM.device_type import get_device_type_from_db_by_id
+    # from HioT.ModelsORM.device import add_device_to_db
 
-    def gen_dev_and_add_db(info:dict):
-        dev_info = get_device_type_from_db_by_id(info['device_type_id'])
-        gen_dev = {
-            "device_type_id" : dev_info['device_type_id'],
-            "config": dev_info['default_config'],
-            "data_item": dev_info['data_item']
-        }
-        dev = ModelDevice(**gen_dev)
-        add_device_to_db(dev.dict())
-        return dict
+    # def gen_dev_and_add_db(info:dict):
+    #     dev_info = get_device_type_from_db_by_id(info['device_type_id'])
+    #     gen_dev = {
+    #         "device_type_id" : dev_info['device_type_id'],
+    #         "config": dev_info['default_config'],
+    #         "data_item": dev_info['data_item']
+    #     }
+    #     dev = ModelDevice(**gen_dev)
+    #     add_device_to_db(dev.dict())
+    #     return dict
 
-    config = gen_dev_and_add_db(default_config) #初次连接需要从服务器获得配置信息
+    # config = gen_dev_and_add_db(default_config) #初次连接需要从服务器获得配置信息
 
     ##########以上内容需要通过FASTAPI接口完成###################
 
@@ -72,6 +72,6 @@ if __name__ == '__main__':
 
     #比方说我设备在config里获得我的设备ID是4，通信方式是MQTT
 
-
+    the_mqtt(1)
 
     

@@ -8,8 +8,8 @@ from HioT.Routers import device as route_device
 from HioT.Routers import sdk as route_sdk
 from HioT.Routers import setting as route_setting
 from HioT.Routers import user as route_user
-app = FastAPI()
 
+app = FastAPI()
 
 @app.get('/', tags=['root'])
 async def app_welcome() -> str:
