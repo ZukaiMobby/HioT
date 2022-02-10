@@ -1,5 +1,5 @@
 from types import NoneType
-from typing import List
+from typing import List, Tuple
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.sql import text
 
@@ -31,7 +31,7 @@ def is_uid_in_db(uid:int)->bool:
         return True
 
 @log_handler
-def add_user_to_db(user_model: dict) -> bool:
+def add_user_to_db(user_model: dict):
     """ 从User模型中抽取设备列表并转换到字符串并插入数据库 """
     if user_model['uid'] == None:
         #新建一个用户
@@ -42,10 +42,10 @@ def add_user_to_db(user_model: dict) -> bool:
         session.add(the_user)
         session.commit()
         logger.info("新增用户： "+str(the_user))
-        return True
+        return (True,0,"新增用户： "+str(the_user),{"uid":the_user.uid})
     else:
         logger.error(f"请求的用户{user_model['name']} 添加时存在UID字段")
-        return False
+        return (False,100,f"请求的用户{user_model['name']} 添加时存在UID字段",{})
     
 
 @log_handler
@@ -80,15 +80,16 @@ def get_all_user_uid_from_db() -> List:
     return results
 
 @log_handler
-def update_user_to_db(user_model) -> bool:
+def update_user_to_db(user_model):
     if user_model['uid'] == None:
         logger.error(f"请求的用户{user_model['name']} 更新时UID字段不存在")
+        return (False,402,f"请求的用户{user_model['name']} 更新时UID字段不存在",{})
     else:
         the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == user_model['uid']).first()
 
         if the_user == None:
             logger.error(f"请求的UID{user_model['uid']} 不在数据库中")
-            return False
+            return (False,402,f"请求的UID{user_model['uid']} 不在数据库中",{})
 
         the_user.name = user_model['name']
         the_user.password = user_model['password']
@@ -100,7 +101,7 @@ def update_user_to_db(user_model) -> bool:
         the_user.devices = user_model['devices']
 
         session.commit() #提交修改
-        return True
+        return (True,0,f"更新用户{user_model['name']}成功",{})
       
 
 @log_handler
@@ -109,16 +110,17 @@ def delete_user_from_db(uid: int) -> bool:
     if not the_user:
         #所删除的用户不存在
         logger.error(f"请求删除的用户：{uid} 不存在")
-        return False
+        return (False,402,f"请求删除的用户：{uid} 不存在",{})
+
     session.delete(the_user)
     session.commit()
     the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == uid).first()
     if not the_user:
         logger.info(f"请求删除的用户：{uid} 成功")
-        return True
+        return (True,0,f"请求删除的用户：{uid} 成功",{})
     else:
         logger.error(f"请求删除的用户：{uid} 失败，请检查")
-        return False
+        return (False,-1,f"请求删除的用户：{uid} 失败，请检查",{})
 
 
 OrmBase.metadata.create_all(engine)

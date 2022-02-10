@@ -146,12 +146,12 @@ update_device_data_item_to_db(dev.dict())
 
 #读取flux中对应的数据
 
-from HioT.Database.influxDB import influx_query_by_device
-print("============>1")
-influx_query_by_device(1)
-print("============>2")
-influx_query_by_device(2)
-print("============>3")
-influx_query_by_device(3)
-print("============>4")
-influx_query_by_device(4)
+# from HioT.Database.influxDB import influx_query_by_device
+# print("============>1")
+# influx_query_by_device(1)
+# print("============>2")
+# influx_query_by_device(2)
+# print("============>3")
+# influx_query_by_device(3)
+# print("============>4")
+# influx_query_by_device(4)
