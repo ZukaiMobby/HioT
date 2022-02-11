@@ -1,7 +1,7 @@
 from HioT.Database.influxDB import influx_query_by_device
 from HioT.Models.device import ModelDevice, ModelDeviceChangeStatus, ModelRegisterDevice
 from HioT.Models.user import ModelUser
-from HioT.ModelsORM.device import add_device_to_db, delete_device_from_db, get_all_device_did, get_device_from_db_by_id, update_device_config_to_db, update_device_status_to_db
+from HioT.ModelsORM.device import add_device_to_db, delete_device_from_db, get_all_device_did, get_device_from_db_by_id, update_device_config_to_db, update_device_data_item_to_db, update_device_status_to_db
 from HioT.ModelsORM.device_type import get_device_type_from_db_by_id
 from HioT.ModelsORM.user import get_user_from_db_by_id
 
@@ -44,7 +44,7 @@ def register_a_device(new_device_info: ModelRegisterDevice):
     }
 
 
-def get_a_device_current_status(did):
+def get_a_device_current_status(did:int):
     the_deivce_info = get_device_from_db_by_id(did)
     if the_deivce_info == {}:
         return {
@@ -61,7 +61,7 @@ def get_a_device_current_status(did):
     }
 
 
-def change_a_device_status(new_device_status_info:ModelDeviceChangeStatus,did):
+def change_a_device_status(new_device_status_info:ModelDeviceChangeStatus,did:int):
     device_info = get_device_from_db_by_id(did)
     if device_info == {}:
         return {
@@ -87,7 +87,7 @@ def change_a_device_status(new_device_status_info:ModelDeviceChangeStatus,did):
         "data":result[3]
     }
 
-def delete_a_device(did):
+def delete_a_device(did:int):
     the_device_info = get_device_from_db_by_id(did)
 
     if the_device_info == {}:
@@ -141,7 +141,7 @@ def delete_device_history():
     return "此接口暂不考虑开发"
     pass
 
-def device_get_config(did):
+def device_get_config(did:int):
     """ 此接口由设备调用 """
     device_info = get_device_from_db_by_id(did)
     if device_info == {}:
@@ -149,7 +149,7 @@ def device_get_config(did):
     the_device = ModelDevice(**device_info)
     return the_device.config
 
-def put_device_config(did,new_config):
+def put_device_config(did:int,new_config):
     """ 此接口由设备所属用户调用,建议从查询接口获得原来的配置之后修改 """
     device_info = get_device_from_db_by_id(did)
     if device_info == {}:
@@ -167,4 +167,29 @@ def put_device_config(did,new_config):
         "message":result[2],
         "data":result[3]
     }
-    
+
+def update_device_data_item(did:int,data_item:dict):
+    print(data_item)
+
+    for k,v in data_item.items():
+        print(k)
+        print(v)
+        print(type(v))
+
+
+    device_info = get_device_from_db_by_id(did)
+    if device_info == {}:
+        return {
+            "errno":401,
+            "message": f"设备{did}查询失败，接口返回了空",
+            "data":{}
+        }
+        
+    the_device = ModelDevice(**device_info)
+    the_device.data_item = data_item
+    result = update_device_data_item_to_db(the_device.dict())
+    return {
+        "errno":result[1],
+        "message":result[2],
+        "data":result[3]
+    }

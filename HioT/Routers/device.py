@@ -60,3 +60,7 @@ def put_device_config(did:int,new_config:dict):
     print(new_config)
     return device.put_device_config(did,new_config)
 
+@router.put('/{did}/update',response_model=CommonResponseModel)
+def update_device_data_item(did:int, data_item:dict):
+    """ 此接口由设备调用,用来更新数据 """
+    return device.update_device_data_item(did,data_item)

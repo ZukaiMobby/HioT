@@ -41,6 +41,7 @@ def check_old_new_data_item(old: dict, new: dict, did: int) -> bool:
         return False
     try:
         for item in list(old.keys()):
+            print(  f"###old:{type(old[item])}###new:{type(new[item])}"  )
             if type(old[item]) == type(new[item]):
                 pass
             else:
@@ -133,16 +134,16 @@ def update_device_data_item_to_db(device_model:dict) -> bool:
 
     if not type(did) == int:
         logger.error(f"设备DID应为int, 不是{type(did)}")
-        return False
+        return (False,403,f"设备DID应为int, 不是{type(did)}",{})
     the_device: ORMDevice = session.query(
         ORMDevice).filter(ORMDevice.did == did).first()
     if not the_device:
         logger.error(f"设备DID: {did} 不存在")
-        return False
+        return (False,403,f"设备DID: {did} 不存在",{})
 
     # 在这里检查数据项是否一一对应匹配
     if not check_old_new_data_item(json.loads(the_device.data_item), data_model, did):
-        return False
+        return (False,403,"数据项与原先数据内容的数据类型不匹配",{})
 
     the_device.data_item = json.dumps(data_model)
     session.commit()
@@ -166,7 +167,7 @@ def update_device_data_item_to_db(device_model:dict) -> bool:
     influx_write(line_protocol_data)
 
     logger.info(f"设备ID: {did} 数据项修改已提交")
-
+    return (True,0,f"设备ID: {did} 数据项修改已提交",the_device.data_item)
 
 @log_handler
 def update_device_status_to_db(device_model: dict,immediate_commit = True ) -> bool:
