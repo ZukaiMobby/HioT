@@ -1,9 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import registry, sessionmaker, Session
 from HioT.Plugins.get_config import global_config
-from HioT.Plugins.get_logger import logger, log_handler
+from HioT.Plugins.get_logger import logger
 import os.path
-from rich import print
 
 with logger:
     logger.debug("数据库程序执行路径："+os.path.abspath("__file__"))

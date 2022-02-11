@@ -8,7 +8,7 @@ class ModelDeviceType(BaseModel):
     device_type_name: str
     description: Optional[str]
     data_item: Optional[dict]
-    default_config: Optional[dict]  # 配置应该在新建设备类型的时候完成
+    default_config: Optional[dict]
 
 class ModelCreateDeviceType(BaseModel):
     device_type_name: str
