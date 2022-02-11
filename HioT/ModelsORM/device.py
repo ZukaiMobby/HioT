@@ -3,6 +3,7 @@ import json
 from types import NoneType
 
 from typing import List, Tuple
+from fastapi import FastAPI
 from sqlalchemy import Column, Integer, String, Boolean
 
 from HioT.Database.sqliteDB import OrmBase, session, engine
@@ -53,38 +54,39 @@ def check_old_new_data_item(old: dict, new: dict, did: int) -> bool:
 ###############验证类函数结束################
 
 @log_handler
-def add_device_to_db(device_model: dict) -> bool:
+def add_device_to_db(device_model: dict):
 
     if device_model['did'] == None:
         # 新建一个设备至数据库
         if type(device_model['data_item']) == None:
             logger.error(f"写入设备数据时出错：必须存在至少一个数据项")
-            return False
+            return (False,100,f"写入设备数据时出错：必须存在至少一个数据项",{})
         if type(device_model['data_item']) == dict:
             device_model['data_item'] = json.dumps(device_model['data_item'])
         else:
             logger.error(f"写入设备数据时出错：数据项必须是字典类型")
-
+            return (False,100,f"写入设备数据时出错：数据项必须是字典类型",{})
         if type(device_model['config']) == dict:
             device_model['config'] = json.dumps(device_model['config'])
 
         if not type(device_model['data_item']) == str:
             logger.error(
                 f"写入设备数据时出错：无法从 {type(device_model['data_item'])} 转换为 str")
-            return False
+            return (False,100,f"写入设备数据时出错：无法从 {type(device_model['data_item'])} 转换为 str",{})
+
         if type(device_model['config']) != NoneType:
             if type(device_model['config']) != str:
-                logger.error(
-                    f"写入设备数据时出错：无法从 {type(device_model['config'])} 转换为 str")
+                logger.error(f"写入设备数据时出错：无法从 {type(device_model['config'])} 转换为 str")
+                return (False,100, f"写入设备数据时出错：无法从 {type(device_model['config'])} 转换为 str"  ,{})
 
         the_device = ORMDevice(**device_model)
         session.add(the_device)
         session.commit()
         logger.info("新增设备： "+str(the_device))
-        return True
+        return (True,0,"新增设备： "+str(the_device),{"did":the_device.did})
     else:
         logger.error(f"请求添加的设备{device_model['device_name']} 添加时存在did字段")
-        return False
+        return (False,100,f"请求添加的设备{device_model['device_name']} 添加时存在did字段",{})
 
 
 @log_handler
@@ -172,16 +174,16 @@ def update_device_status_to_db(device_model: dict,immediate_commit = True ) -> b
     did = device_model['did']
     if not type(did) == int:
         logger.error(f"设备DID应为int, 不是{type(did)}")
-        return False
+        return (False,100,f"设备DID应为int, 不是{type(did)}",{})
     the_device: ORMDevice = session.query(
         ORMDevice).filter(ORMDevice.did == did).first()
     if not the_device:
         logger.error(f"设备DID: {did} 不存在")
-        return False
+        return (False,100,f"设备DID: {did} 不存在",{})
 
     if the_device.device_type_id != device_model['device_type_id']:
         logger.error(f"设备DID: {did} 不得修改设备类型")
-        return False
+        return (False,100,f"设备DID: {did} 不得修改设备类型",{})
 
     the_device.bind_user = device_model['bind_user'] #这里需要把列表重新序列化
     the_device.device_description = device_model['device_description']
@@ -193,7 +195,7 @@ def update_device_status_to_db(device_model: dict,immediate_commit = True ) -> b
         logger.info(f"设备DID: {did} 状态已更新")
     else:
         logger.info(f"设备DID: {did} 状态更新已缓存")
-    return True
+    return (True,0,f"设备DID: {did} 状态已更新",{})
 
 
 @log_handler
@@ -203,16 +205,17 @@ def update_device_config_to_db(device_model: dict) -> bool:
 
     if not type(did) == int:
         logger.error(f"设备DID应为int, 不是{type(did)}")
-        return False
+        return (False,401,f"设备DID应为int, 不是{type(did)}",{})
     the_device: ORMDevice = session.query(
         ORMDevice).filter(ORMDevice.did == did).first()
     if not the_device:
         logger.error(f"设备DID: {did} 不存在")
-        return False
+        return (False,401,f"设备DID: {did} 不存在",{})
 
     the_device.config = json.dumps(config)
     logger.info(f"设备DID: {did} 配置更新成功")
-    return True
+    session.commit()
+    return (True,0,f"设备DID: {did} 配置更新成功",{})
 
 
 @log_handler
@@ -228,16 +231,16 @@ def delete_device_from_db(did: int) -> bool:
     if not the_device:
         #所删除的设备不存在
         logger.error(f"请求删除的设备：{did} 不存在")
-        return False
+        return (False,401,f"请求删除的设备：{did} 不存在",{})
     session.delete(the_device)
     session.commit()
     the_device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
     if not the_device:
         logger.info(f"请求删除的设备：{did} 成功")
-        return True
+        return (True,0,f"请求删除的设备：{did} 成功",{})
     else:
         logger.error(f"请求删除的设备：{did} 失败，请检查")
-        return False
+        return (False,401,f"请求删除的设备：{did} 失败，请检查",{})
 
 @log_handler
 
@@ -249,7 +252,19 @@ def get_device_not_bind_with_user():
         res.append((device.did,device.device_type_id))
     return res
 
+@log_handler
+
+def get_all_device_did():
+    with engine.connect() as con:
+        result_raw = con.execute('SELECT did FROM Device')
+        if type(result_raw) == NoneType:
+            return []
+        results = []
+        for item in result_raw:
+            results.append(item[0])
+    return results
+
 if __name__ == '__main__':
     # 代码临时测试区
-    print(get_device_not_bind_with_user())
+    print(get_all_device_did())
     pass
