@@ -1,10 +1,12 @@
 from types import NoneType
-from typing import List, Optional, Any
-from pydantic import BaseModel
+from typing import Any, List, Optional
+
 from HioT.Models.device import ModelDevice
-from HioT.ModelsORM.device import get_device_from_db_by_id,ORMDevice, get_device_not_bind_with_user,update_device_status_to_db
-from HioT.ModelsORM.user import update_user_to_db,get_user_from_db_by_id
-from HioT.Plugins.get_logger import log_handler,logger
+from HioT.ModelsORM.device import (get_device_from_db_by_id,
+                                   update_device_status_to_db)
+from HioT.ModelsORM.user import update_user_to_db
+from HioT.Plugins.get_logger import log_handler, logger
+from pydantic import BaseModel
 from rich import print
 
 
@@ -108,14 +110,6 @@ class ModelUpdateUser(BaseModel):
 
 
 if __name__ == '__main__':
-    user = ModelUser(**get_user_from_db_by_id(1))
-    # user.unbind_device(1)
-    # user.bind_device(1)
-    # user.bind_device(1)
-    # user.bind_device(4)
-    # user.bind_device(3)
-    # user.unbind_device(3)
-    # print(get_device_not_bind_with_user())
-    
+    pass
 
 
