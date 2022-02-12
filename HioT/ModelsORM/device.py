@@ -31,11 +31,13 @@ OrmBase.metadata.create_all(engine)
 def check_old_new_data_item(old: dict, new: dict, did: int) -> bool:
 
     if len(old) != len(new):
+        #print(f'######old {len(old)} ######new{len(new)}')
         logger.error(f"设备ID: {did} 数据项修改出错：数据元素个数不匹配")
         return False
     try:
 
         for item in list(old.keys()):
+            #print(f'######old {type(old[item])} ######new{type(new[item])}')
             if type(old[item]) == type(new[item]):
                 pass
             else:
@@ -143,15 +145,15 @@ def update_device_data_item_to_db(device_model:dict) -> Tuple[bool,int,str,dict]
         return (False,403,hint,{})
 
     try:
-        old_data_model = json.loads(the_device.data_item)
-        new_data_model = json.dumps(data_model)
+        old_data_model:dict = json.loads(the_device.data_item)
+        new_data_model:str = json.dumps(data_model)
     except:
         hint = f"更新设备{did}数据项时出错: 数据反序列失败"
         logger.error(hint)
         return (False,403,hint,{})
     # 在这里检查数据项是否一一对应匹配
-    if not check_old_new_data_item(old_data_model, new_data_model, did):
-        return (False,403,"数据项与原先数据内容的数据类型不匹配",{})
+    if not check_old_new_data_item(old_data_model, data_model, did):
+        return (False,403,'数据一致性检查失败，格式{"data1":value1,"data2":value2}',{})
 
     the_device.data_item = new_data_model
     session.commit()
@@ -175,7 +177,7 @@ def update_device_data_item_to_db(device_model:dict) -> Tuple[bool,int,str,dict]
     hint = f"设备ID: {did} 数据项修改已提交"
 
     logger.info(hint)
-    return (True,0,hint,the_device.data_item)
+    return (True,0,hint,json.loads(the_device.data_item))
 
 
 def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
@@ -270,5 +272,4 @@ def get_all_device_did():
 
 if __name__ == '__main__':
     # 代码临时测试区
-    print(get_all_device_did())
     pass

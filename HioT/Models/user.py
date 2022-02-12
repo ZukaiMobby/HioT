@@ -44,7 +44,7 @@ class ModelUser(BaseModel):
                 return (False,401,hint,{})
 
         elif dev.bind_user == None:
-            if len(self.devices) > 0:
+            if self.devices:
                 if did in self.devices:
                     hint = f"设备 {did} 没有被绑定，但是用户 {self.uid} 称其已绑定"
                     logger.error(hint)

@@ -5,7 +5,6 @@ from HioT.ModelsORM.device import add_device_to_db, delete_device_from_db, get_a
 from HioT.ModelsORM.device_type import get_device_type_from_db_by_id
 from HioT.ModelsORM.user import get_user_from_db_by_id
 
-
 def get_all_device():
     """ 获取所有设备id，包括所有已经注册的设备 """
     return {
@@ -170,13 +169,8 @@ def put_device_config(did:int,new_config):
     }
 
 def update_device_data_item(did:int,data_item:dict):
+    
     print(data_item)
-
-    for k,v in data_item.items():
-        print(k)
-        print(v)
-        print(type(v))
-
 
     device_info = get_device_from_db_by_id(did)
     if device_info == {}:
