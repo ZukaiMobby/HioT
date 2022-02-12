@@ -11,6 +11,9 @@ from HioT.ModelsORM.device import delete_device_from_db, get_device_from_db_by_i
 from HioT.ModelsORM.user import get_user_from_db_by_id
 from HioT.Plugins.get_logger import logger
 
+p_mqtt = 1
+p_ipv4 = 2
+p_ipv6 = 3
 
 
 class ORMDeviceType(OrmBase):
@@ -18,6 +21,11 @@ class ORMDeviceType(OrmBase):
     device_type_id = Column(Integer, primary_key=True, index=True)
     device_type_name = Column(String)
     description = Column(String)
+
+    keep_alive = Column(Integer)
+    v4port = Column(Integer)
+    v6port = Column(Integer)
+    protocol = Column(Integer)
 
     data_item = Column(String)  # 应该是Json序列化后的结果
     default_config = Column(String)  # 应该是Json序列化后的结果
@@ -34,6 +42,49 @@ def add_device_type_to_db(type_info: dict) -> Tuple[bool,int,str,dict]:
     """ 从ModelDeviceType中抽取并插入数据库 """
     if type_info['device_type_id'] == None:
         #新建一个设备类型
+
+        if not type_info['keep_alive']:
+            hint = f"新增设备类型出错：必须设置 keep_alive"
+            logger.error(hint)
+            return (False,332,hint,{})
+        else:
+            type_info['keep_alive'] = int(type_info['keep_alive'])
+        
+        if not type_info['protocol']:
+            hint = f"新增设备类型出错：必须设置 protocol"
+            logger.error(hint)
+            return (False,332,hint,{})
+        else:
+            type_info['protocol'] = int(type_info['protocol'])
+
+            if type_info['protocol'] == p_ipv4:
+
+                if not type_info['v4port']:
+                    hint = f"新增设备类型出错：ipv4 必须设置 vport4"
+                    logger.error(hint)
+                    return (False,332,hint,{})
+                elif int(type_info['v4port']) <= 0:
+                    hint = f"新增设备类型出错：vport4 需大于0"
+                    logger.error(hint)
+                    return (False,332,hint,{})
+                else:
+                    pass
+            elif type_info['protocol'] == p_ipv6:
+                if not type_info['v6port']:
+                    hint = f"新增设备类型出错：ipv6 必须设置 vport6"
+                    logger.error(hint)
+                    return (False,332,hint,{})
+                elif int(type_info['v6port']) <= 0:
+                    hint = f"新增设备类型出错：vport6 需大于0"
+                    logger.error(hint)
+                    return (False,332,hint,{})
+                else:
+                    pass
+            elif type_info['protocol'] == p_mqtt:
+                #后续如果需要MQTT相关认证加这里
+                pass
+            else:
+                hint = f"新增设备类型出错：不支持的协议类型"
 
         if not type_info['data_item']:
             hint = f"新增设备类型出错：必须存在至少一个数据项"
@@ -58,7 +109,11 @@ def add_device_type_to_db(type_info: dict) -> Tuple[bool,int,str,dict]:
             "device_type_name": type_info['device_type_name'],
             "description":type_info['description'],
             "data_item":type_info['data_item'],
-            "default_config":type_info['default_config']
+            "default_config":type_info['default_config'],
+            "keep_alive":type_info['keep_alive'],
+            "v4port":type_info['v4port'],
+            "v6port":type_info['v6port'],
+            "protocol":type_info['protocol']
         }
 
         

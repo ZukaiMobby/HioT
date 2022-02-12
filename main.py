@@ -10,12 +10,17 @@ from HioT.Routers import setting as route_setting
 from HioT.Routers import user as route_user
 
 app = FastAPI()
+info = '''
+Welcome to HioT platform
 
+Here are some notes
+1. Do not run behind a proxy
+'''
 
 @app.get('/', tags=['root'])
 async def app_welcome() -> str:
     """ Uvicorn 欢迎页面 """
-    return "Welcome to HioT platform"
+    return info
 
 
 @app.get('/favicon.ico', tags=['root'])

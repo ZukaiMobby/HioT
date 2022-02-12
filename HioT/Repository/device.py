@@ -1,3 +1,5 @@
+import ipaddress
+from starlette.requests import Request
 from HioT.Database.influxDB import influx_query_by_device
 from HioT.Models.device import ModelDevice, ModelDeviceChangeStatus, ModelRegisterDevice
 from HioT.Models.user import ModelUser
@@ -14,8 +16,17 @@ def get_all_device():
     }
 
 
-def register_a_device(new_device_info: ModelRegisterDevice):
+def register_a_device(new_device_info: ModelRegisterDevice,request:Request):
     """ 由设备发起，设备注册时调用 """
+    ip:str = request.client[0]
+    ip = ipaddress.ip_address(ip)
+    port:int = request.client[1]
+
+    if type(ip) == ipaddress.IPv4Address:
+        is_v4 = True
+    else:
+        is_v4 = False
+
     def gen_dev_and_add_db(new_device_info:ModelRegisterDevice):
 
         dev_info = get_device_type_from_db_by_id(new_device_info.device_type_id)
@@ -27,11 +38,26 @@ def register_a_device(new_device_info: ModelRegisterDevice):
                 "data":{}
                 }
 
-        gen_dev = {
-            "device_type_id" : dev_info['device_type_id'],
-            "config": dev_info['default_config'],
-            "data_item": dev_info['data_item']
-        }
+        if is_v4:
+            gen_dev = {
+                "device_type_id" : dev_info['device_type_id'],
+                "keep_alive":dev_info['keep_alive'],
+                "ipv4":int(ip),
+                "v4port":int(port),
+                "protocol":dev_info['protocol'],
+                "config": dev_info['default_config'],
+                "data_item": dev_info['data_item'],
+            }
+        else:
+            gen_dev = {
+                "device_type_id" : dev_info['device_type_id'],
+                "keep_alive":dev_info['keep_alive'],
+                "ipv6":int(ip),
+                "v6port":int(port),
+                "protocol":dev_info['protocol'],
+                "config": dev_info['default_config'],
+                "data_item": dev_info['data_item'],
+            }
         
         dev = ModelDevice(**gen_dev)
         
@@ -77,6 +103,19 @@ def change_a_device_status(new_device_status_info:ModelDeviceChangeStatus,did:in
             the_device.device_name = v
         elif k == 'device_description':
             the_device.device_description = v
+
+        elif k == 'keep_alive':
+            the_device.keep_alive = v
+
+        elif k == 'v4port':
+            the_device.v4port = v
+        
+        elif k == 'v6port':
+            the_device.v6port = v
+
+        elif k == 'protocol':
+            the_device.protocol = v
+
         else:
             pass
     result = update_device_status_to_db(the_device.dict())
@@ -168,7 +207,7 @@ def put_device_config(did:int,new_config):
         "data":result[3]
     }
 
-def update_device_data_item(did:int,data_item:dict):
+def update_device_data_item(did:int,data_item:dict,request):
     
     print(data_item)
 

@@ -1,3 +1,4 @@
+from starlette.requests import Request
 from fastapi import APIRouter
 from HioT.Models.device import ModelDeviceChangeStatus, ModelRegisterDevice
 from HioT.Models.response import CommonResponseModel
@@ -14,9 +15,9 @@ def get_all_device():
     return device.get_all_device()
 
 @router.put('/',response_model=CommonResponseModel)
-def register_a_device(new_device:ModelRegisterDevice):
+def register_a_device(new_device:ModelRegisterDevice,request:Request):
     """ 由设备发起，设备注册时调用 """
-    return device.register_a_device(new_device)
+    return device.register_a_device(new_device,request)
 
 @router.get('/{did}',response_model=CommonResponseModel)
 def get_a_device_current_status(did:int):
@@ -44,10 +45,7 @@ def delete_device_history():
 
 @router.get('/{did}/config',response_model=dict)
 def device_get_config(did:int):
-    """ 
-    此接口由设备调用
-    不是设备自身参数的设置
-    """
+    """ 此接口由设备调用 """
     return device.device_get_config(did)
 
 @router.put('/{did}/config',response_model=CommonResponseModel)
@@ -61,6 +59,7 @@ def put_device_config(did:int,new_config:dict):
     return device.put_device_config(did,new_config)
 
 @router.put('/{did}/update',response_model=CommonResponseModel)
-def update_device_data_item(did:int, data_item:dict):
+def update_device_data_item(did:int, data_item:dict, request: Request):
     """ 此接口由设备调用,用来更新数据 """
-    return device.update_device_data_item(did,data_item)
+
+    return device.update_device_data_item(did,data_item,request)

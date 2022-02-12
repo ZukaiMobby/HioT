@@ -16,7 +16,18 @@ class ORMDevice(OrmBase):
     bind_user = Column(Integer)
     device_name = Column(String)
     device_description = Column(String)
+
     online = Column(Boolean)
+    keep_alive = Column(Integer)
+
+    ipv4 = Column(Integer)
+    v4port = Column(Integer)
+
+    ipv6 = Column(Integer)
+    v6port = Column(Integer)
+
+    protocol = Column(Integer)
+
     config = Column(String)  # 应为序列化之后的json
     data_item = Column(String)  # 应为序列化之后的json
 
@@ -116,8 +127,18 @@ def get_device_from_db_by_id(did: int) -> dict:
         "bind_user": device.bind_user,
         "device_name": device.device_name,
         "device_description": device.device_description,
+
+        "online":device.online,
+        "keep_alive":device.keep_alive,
+        "ipv4":int(device.ipv4),
+        "ipv6":int(device.ipv6),
+        "v4port":device.v4port,
+        "v6port":device.v6port,
+        "protocol":device.protocol,
+
         "config": config,
-        "data_item": data_item,
+        "data_item": data_item
+
     }
     return device_in_dict
 
@@ -202,6 +223,13 @@ def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
     device.device_description = device_model['device_description']
     device.device_name = device_model['device_name']
     device.online = device_model['online']
+    device.protocol = device_model['protocol']
+    device.ipv4 = int(device_model['ipv4'])
+    device.ipv6 = int(device_model['ipv6'])
+    device.v4port = device_model['v4port'],
+    device.v6port = device_model['v6port'],
+    device.keep_alive = device_model['keep_alive']
+
     session.commit()
 
     hint = f"更新设备status: {did} status已更新"
