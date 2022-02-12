@@ -1,15 +1,13 @@
 from getpass import getpass
 import os
-import platform
 from time import sleep
 from HioT.Plugins.get_config import *
-from HioT.Plugins.get_logger import logger, log_handler
+from HioT.Plugins.get_logger import logger
 
 from HioT.Models.user import ModelUser
 from HioT.ModelsORM.user import add_user_to_db, get_all_user_uid_from_db
 import subprocess
 
-@log_handler
 def check_files_db():
 
     db_file_path = './'+global_config['database_file_path'] + \

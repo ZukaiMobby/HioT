@@ -1,10 +1,14 @@
-from datetime import datetime
-
-from influxdb_client import InfluxDBClient, Point, WritePrecision
+from logging import LogRecord
+from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 from HioT.Plugins.get_config import influxDB_config
-from rich import print
+from HioT.Plugins.get_logger import logger
+
+"""
+data = "mem,host=host1 used_percent=23.43234543"
+<measurement>[,<tag_key>=<tag_value>[,<tag_key>=<tag_value>]] <field_key>=<field_value>[,<field_key>=<field_value>] [<timestamp>]
+"""
 
 token = influxDB_config['token']
 org = influxDB_config['org']
@@ -12,12 +16,12 @@ bucket = influxDB_config['bucket']
 url = influxDB_config['url']
 
 def influx_write(data: str):
-    #data = "mem,host=host1 used_percent=23.43234543"
     with InfluxDBClient(url=url, token=token, org=org) as client:
+        logger.info(f"INFLUX执行:{data}")
         write_api = client.write_api(write_options=SYNCHRONOUS)
         write_api.write(bucket, org, data)
 
-def influx_query():
+def _influx_query():
     with InfluxDBClient(url=url, token=token, org=org) as client:
         query_api = client.query_api()
         query = f' from(bucket:"{bucket}")\
@@ -57,6 +61,5 @@ def influx_query_by_device(did):
 
 if __name__ == '__main__':
     pass
-    # influx_query_by_device(1)
-    # influx_query_by_device(4)
+    from rich import print
     

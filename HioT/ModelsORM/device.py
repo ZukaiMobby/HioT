@@ -1,13 +1,11 @@
-""" 将dev模型实际的存入到数据库中 """
 import json
 from types import NoneType
 
 from typing import List, Tuple
-from fastapi import FastAPI
 from sqlalchemy import Column, Integer, String, Boolean
 
 from HioT.Database.sqliteDB import OrmBase, session, engine
-from HioT.Plugins.get_logger import log_handler, logger
+from HioT.Plugins.get_logger import logger
 
 class ORMDevice(OrmBase):
     # 设备实例存储位置，其中的数据应该是为当前值
@@ -16,11 +14,9 @@ class ORMDevice(OrmBase):
     did = Column(Integer, primary_key=True, index=True)
     device_type_id = Column(Integer)
     bind_user = Column(Integer)
-
     device_name = Column(String)
     device_description = Column(String)
     online = Column(Boolean)
-
     config = Column(String)  # 应为序列化之后的json
     data_item = Column(String)  # 应为序列化之后的json
 
@@ -31,129 +27,140 @@ class ORMDevice(OrmBase):
 OrmBase.metadata.create_all(engine)
 
 
-###############验证类函数开始################
 
 def check_old_new_data_item(old: dict, new: dict, did: int) -> bool:
-    # print(old)
-    # print(new)
+
     if len(old) != len(new):
         logger.error(f"设备ID: {did} 数据项修改出错：数据元素个数不匹配")
         return False
     try:
+
         for item in list(old.keys()):
-            print(  f"###old:{type(old[item])}###new:{type(new[item])}"  )
             if type(old[item]) == type(new[item]):
                 pass
             else:
                 logger.error(f"设备ID: {did} 数据项修改出错：数据元素类型不匹配")
                 return False
+        return True
+
     except KeyError:
         logger.error(f"设备ID: {did} 数据项修改出错：数据元素名称不匹配")
         return False
-    return True
 
-###############验证类函数结束################
 
-@log_handler
-def add_device_to_db(device_model: dict):
 
-    if device_model['did'] == None:
-        # 新建一个设备至数据库
-        if type(device_model['data_item']) == None:
-            logger.error(f"写入设备数据时出错：必须存在至少一个数据项")
-            return (False,100,f"写入设备数据时出错：必须存在至少一个数据项",{})
-        if type(device_model['data_item']) == dict:
+def add_device_to_db(device_model: dict ) -> Tuple[bool,int,str,dict]:
+    """ 向数据库写入一个新设备 """
+
+    if device_model['did'] != None:
+        hint = f"新增设备时: 不应存在did"
+        logger.error(hint)
+        return (False,100,hint,{})
+
+    else:
+
+        if device_model['data_item'] == None or device_model['config'] == None:
+            hint = f"新增设备时，数据项和配置项必须存在"
+            logger.error(hint)
+            return (False,100,hint,{})
+        try:
             device_model['data_item'] = json.dumps(device_model['data_item'])
-        else:
-            logger.error(f"写入设备数据时出错：数据项必须是字典类型")
-            return (False,100,f"写入设备数据时出错：数据项必须是字典类型",{})
-        if type(device_model['config']) == dict:
             device_model['config'] = json.dumps(device_model['config'])
-
-        if not type(device_model['data_item']) == str:
-            logger.error(
-                f"写入设备数据时出错：无法从 {type(device_model['data_item'])} 转换为 str")
-            return (False,100,f"写入设备数据时出错：无法从 {type(device_model['data_item'])} 转换为 str",{})
-
-        if type(device_model['config']) != NoneType:
-            if type(device_model['config']) != str:
-                logger.error(f"写入设备数据时出错：无法从 {type(device_model['config'])} 转换为 str")
-                return (False,100, f"写入设备数据时出错：无法从 {type(device_model['config'])} 转换为 str"  ,{})
+        except json.JSONDecodeError:
+            hint = f"新增设备时：数据项或配置项序列化出错"
+            logger.error(hint)
+            return (False,501,hint,{})
+        except TypeError:
+            hint = f"新增设备时: 数据项或配置项不是合法的字典类型"
+            logger.error(hint)
+            return (False,501,hint,{})
 
         the_device = ORMDevice(**device_model)
         session.add(the_device)
         session.commit()
-        logger.info("新增设备： "+str(the_device))
-        return (True,0,"新增设备： "+str(the_device),{"did":the_device.did})
-    else:
-        logger.error(f"请求添加的设备{device_model['device_name']} 添加时存在did字段")
-        return (False,100,f"请求添加的设备{device_model['device_name']} 添加时存在did字段",{})
+
+        hint = f"新增设备：{str(the_device)} "
+        data = {"did":the_device.did}
+        logger.info(hint)
+        return (True,0,hint,data)
 
 
-@log_handler
 def get_device_from_db_by_id(did: int) -> dict:
-    # 从数据库中查询（获取）一个设备
+    """ 根据所给的DID以字典的方式返回设备信息用于创建设备实例"""
 
     if not type(did) == int:
-        logger.error(f"设备DID应为int, 不是{type(did)}")
+        logger.error(f"获取设备 {did} 时，did非整形数值")
         return {}
-    the_device: ORMDevice = session.query(
-        ORMDevice).filter(ORMDevice.did == did).first()
-    if not the_device:
-        logger.error(f"设备DID:{did} 不存在")
-        return {}
-    config = None
-    if type(the_device.config) == str:
-        config = json.loads(the_device.config)
-    elif type(the_device.config) == NoneType:
-        pass
-    else:
-        logger.error(f"读取设备信息时发生转换错误:{type(the_device.config)}应为str或None")
 
-    the_device_in_dict = {
-        "did": the_device.did,
-        "device_type_id": the_device.device_type_id,
-        "bind_user": the_device.bind_user,
-        "device_name": the_device.device_name,
-        "device_description": the_device.device_description,
+    device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
+    if not device:
+        logger.error(f"获取设备 {did} 时，接口返回了空")
+        return {}
+
+    try:
+        config = json.loads(device.config)
+        data_item = json.loads(device.data_item)
+
+    except json.JSONDecodeError:
+        logger.error(f"获取设备 {did} 时，无法反序列化为字典")
+        return {}
+    except TypeError:
+        logger.error(f"获取设备 {did} 时，数据项或配置项类型错误")
+        return {}
+
+    device_in_dict = {
+        "did": device.did,
+        "device_type_id": device.device_type_id,
+        "bind_user": device.bind_user,
+        "device_name": device.device_name,
+        "device_description": device.device_description,
         "config": config,
-        "data_item": json.loads(the_device.data_item),
+        "data_item": data_item,
     }
-    return the_device_in_dict
+    return device_in_dict
 
 
-@log_handler
-def update_device_data_item_to_db(device_model:dict) -> bool:
-    # 设备更新数据时注意要将数据同步到Influx中
-    # 对于一些数据需要回传给设备已及时更新状态
-    # 写入之前需要检查一下新来的字段是否完整，是否多了少了，不然写到数据库中后果严重
 
-    did = device_model['did']
+def update_device_data_item_to_db(device_model:dict) -> Tuple[bool,int,str,dict]:
+    """ 将设备更新的数据推送到INFLUX和SQLITE中 """
+    try:
+        did = int(device_model['did'])
+        device_type_id = int(device_model['device_type_id'])
+
+    except ValueError:
+
+        hint = f"更新设备{did}数据项时出错：did和device_type_id应为int"
+        logger.error(hint)
+        return (False,403,hint,{})
+
     data_model = device_model['data_item']
-    device_type_id = device_model['device_type_id']
 
-    if not type(did) == int:
-        logger.error(f"设备DID应为int, 不是{type(did)}")
-        return (False,403,f"设备DID应为int, 不是{type(did)}",{})
-    the_device: ORMDevice = session.query(
-        ORMDevice).filter(ORMDevice.did == did).first()
+
+    the_device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
     if not the_device:
-        logger.error(f"设备DID: {did} 不存在")
-        return (False,403,f"设备DID: {did} 不存在",{})
+        hint = f"更新设备{did}数据项时出错: {did} 不存在"
+        logger.error(hint)
+        return (False,403,hint,{})
 
+    try:
+        old_data_model = json.loads(the_device.data_item)
+        new_data_model = json.dumps(data_model)
+    except:
+        hint = f"更新设备{did}数据项时出错: 数据反序列失败"
+        logger.error(hint)
+        return (False,403,hint,{})
     # 在这里检查数据项是否一一对应匹配
-    if not check_old_new_data_item(json.loads(the_device.data_item), data_model, did):
+    if not check_old_new_data_item(old_data_model, new_data_model, did):
         return (False,403,"数据项与原先数据内容的数据类型不匹配",{})
 
-    the_device.data_item = json.dumps(data_model)
+    the_device.data_item = new_data_model
     session.commit()
 
-    # 在这里将元素添加到influx中
+    # 在这里将元素添加到influx中 #
 
     from HioT.Database.influxDB import influx_write
 
-    #data = "mem,host=host1 used_percent=23.43234543"
-    # <measurement>[,<tag_key>=<tag_value>[,<tag_key>=<tag_value>]] <field_key>=<field_value>[,<field_key>=<field_value>] [<timestamp>]
+    
     line_protocol_data = str(device_type_id)+",did="+str(did)+" "
 
     for k, v in data_model.items():
@@ -161,109 +168,105 @@ def update_device_data_item_to_db(device_model:dict) -> bool:
         if len(v) == 0:
             v = '0'
         line_protocol_data += str(k)+"="+v+","
-    line_protocol_data = line_protocol_data[:-1]
-    print(line_protocol_data)
 
+    line_protocol_data = line_protocol_data[:-1] #截掉最后一个逗号
     influx_write(line_protocol_data)
 
-    logger.info(f"设备ID: {did} 数据项修改已提交")
-    return (True,0,f"设备ID: {did} 数据项修改已提交",the_device.data_item)
+    hint = f"设备ID: {did} 数据项修改已提交"
 
-@log_handler
-def update_device_status_to_db(device_model: dict,immediate_commit = True ) -> bool:
-
-    did = device_model['did']
-    if not type(did) == int:
-        logger.error(f"设备DID应为int, 不是{type(did)}")
-        return (False,100,f"设备DID应为int, 不是{type(did)}",{})
-    the_device: ORMDevice = session.query(
-        ORMDevice).filter(ORMDevice.did == did).first()
-    if not the_device:
-        logger.error(f"设备DID: {did} 不存在")
-        return (False,100,f"设备DID: {did} 不存在",{})
-
-    if the_device.device_type_id != device_model['device_type_id']:
-        logger.error(f"设备DID: {did} 不得修改设备类型")
-        return (False,100,f"设备DID: {did} 不得修改设备类型",{})
-
-    the_device.bind_user = device_model['bind_user'] #这里需要把列表重新序列化
-    the_device.device_description = device_model['device_description']
-    the_device.device_name = device_model['device_name']
-    the_device.online = device_model['online']
-    
-    if immediate_commit:
-        session.commit()
-        logger.info(f"设备DID: {did} 状态已更新")
-    else:
-        logger.info(f"设备DID: {did} 状态更新已缓存")
-    return (True,0,f"设备DID: {did} 状态已更新",{})
+    logger.info(hint)
+    return (True,0,hint,the_device.data_item)
 
 
-@log_handler
-def update_device_config_to_db(device_model: dict) -> bool:
-    config = device_model['config'] #还是一个字典需要转换成字符串
-    did = device_model['did']
+def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
 
-    if not type(did) == int:
-        logger.error(f"设备DID应为int, 不是{type(did)}")
-        return (False,401,f"设备DID应为int, 不是{type(did)}",{})
-    the_device: ORMDevice = session.query(
-        ORMDevice).filter(ORMDevice.did == did).first()
-    if not the_device:
-        logger.error(f"设备DID: {did} 不存在")
-        return (False,401,f"设备DID: {did} 不存在",{})
+    try:
+        did = int(device_model['did'])
 
-    the_device.config = json.dumps(config)
-    logger.info(f"设备DID: {did} 配置更新成功")
+    except ValueError:
+
+        hint = f"更新设备status时出错：did 不应为{type(device_model['did'])}"
+        logger.error(hint)
+        return (False,403,hint,{})
+
+    device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
+
+    if not device:
+        hint = f"更新设备status时出错: {did} 不存在"
+        logger.error(hint)
+        return (False,100,hint,{})
+
+    device.bind_user = device_model['bind_user']
+    device.device_description = device_model['device_description']
+    device.device_name = device_model['device_name']
+    device.online = device_model['online']
     session.commit()
-    return (True,0,f"设备DID: {did} 配置更新成功",{})
 
+    hint = f"更新设备status: {did} status已更新"
+    return (True,0,hint,{})
 
-@log_handler
+def update_device_config_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
+    config = device_model['config'] #还是一个字典需要转换成字符串
+    try:
+        did = int(device_model['did'])
+        config = json.dumps(device_model['config'])
+
+    except ValueError:
+        hint = f"写入设备配置时出错：did或config异常"
+        logger.error(hint)
+        return (False,401,hint,{})
+
+    the_device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
+    if not the_device:
+        hint = f"写入设备配置时出错：设备 {did} 不存在"
+        logger.error(hint)
+        return (False,401,hint,{})
+
+    the_device.config = config
+    session.commit()
+
+    hint = f"写入设备 {did} 配置成功"
+    logger.info(hint)
+    return (True,0,hint,{})
+
 def device_config_push_to_device():
     pass
 
 
-@log_handler
-def delete_device_from_db(did: int) -> bool:
-    #删除设备，也要删除历史数据
+def delete_device_from_db(did: int) -> Tuple[bool,int,str,dict]:
+    try:
+        did = int(did)
+
+    except ValueError:
+        hint = f"删除设备时出错：did 不应为{type(did)}"
+        logger.error(hint)
+        return (False,403,hint,{})
 
     the_device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
     if not the_device:
-        #所删除的设备不存在
-        logger.error(f"请求删除的设备：{did} 不存在")
-        return (False,401,f"请求删除的设备：{did} 不存在",{})
+        hint = f"删除设备时出错：设备{did}不存在"
+        logger.error(hint)
+        return (False,401,hint,{})
+
     session.delete(the_device)
     session.commit()
-    the_device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
-    if not the_device:
-        logger.info(f"请求删除的设备：{did} 成功")
-        return (True,0,f"请求删除的设备：{did} 成功",{})
-    else:
-        logger.error(f"请求删除的设备：{did} 失败，请检查")
-        return (False,401,f"请求删除的设备：{did} 失败，请检查",{})
 
-@log_handler
+    hint = f"删除设备 {did} 成功"
+    logger.info(hint)
+    return (True,0,hint,{})
 
 def get_device_not_bind_with_user():
     #返回列表【（设备ID，设备类型ID）】
-    the_devices: List[ORMDevice] = session.query(ORMDevice).filter(ORMDevice.bind_user == None)
-    res = []
-    for device in the_devices:
-        res.append((device.did,device.device_type_id))
-    return res
+    devices: List[ORMDevice] = session.query(ORMDevice).filter(ORMDevice.bind_user == None)
+    return [(dev.did, dev.device_type_id) for dev in devices ]
 
-@log_handler
 
 def get_all_device_did():
     with engine.connect() as con:
-        result_raw = con.execute('SELECT did FROM Device')
-        if type(result_raw) == NoneType:
+        res = con.execute('SELECT did FROM Device')
+        if type(res) == NoneType:
             return []
-        results = []
-        for item in result_raw:
-            results.append(item[0])
-    return results
+        return [ item[0] for item in res ]
 
 if __name__ == '__main__':
     # 代码临时测试区

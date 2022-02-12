@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.sql import text
 
 from HioT.Database.sqliteDB import OrmBase,session,engine
-from HioT.Plugins.get_logger import log_handler, logger
+from HioT.Plugins.get_logger import logger
 
 
 class ORMUser(OrmBase):
@@ -21,7 +21,7 @@ class ORMUser(OrmBase):
         else:
             return f"用户ID: {self.uid}; 用户名{self.name}"
 
-
+OrmBase.metadata.create_all(engine)
 
 def is_uid_in_db(uid:int)->bool:
     res = session.query(ORMUser).filter(ORMUser.uid == uid).first()
@@ -30,35 +30,36 @@ def is_uid_in_db(uid:int)->bool:
     else:
         return True
 
-@log_handler
-def add_user_to_db(user_model: dict):
-    """ 从User模型中抽取设备列表并转换到字符串并插入数据库 """
-    if user_model['uid'] == None:
-        #新建一个用户
-        if user_model['devices']:
-            user_model['devices'] = " ".join(map(str,user_model['devices']))
+
+def add_user_to_db(user_model: dict) -> Tuple[bool,int,str,dict]:
+    """ 写入新用户 """
+    if user_model['uid'] != None or user_model['devices']:
+        hint = f"请求的用户{user_model['name']} 添加时存在UID或DEVICES字段"
+        logger.error(hint)
+        return (False,506,hint,{})
+    else:
         the_user = ORMUser(**user_model)
-        logger.debug("添加前： "+str(the_user))
         session.add(the_user)
         session.commit()
-        logger.info("新增用户： "+str(the_user))
-        return (True,0,"新增用户： "+str(the_user),{"uid":the_user.uid})
-    else:
-        logger.error(f"请求的用户{user_model['name']} 添加时存在UID字段")
-        return (False,100,f"请求的用户{user_model['name']} 添加时存在UID字段",{})
-    
 
-@log_handler
+        hint = f"新增用户：{str(the_user)}"
+        data = {"uid":the_user.uid}
+        logger.info(hint)
+        return (True,0,hint,data)
+
+
 def get_user_from_db_by_id(uid: int) -> dict:
-    # 当查询的用户不存在时会返回空字典
-    the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == uid).first()
+    """ 从数据库中取得用户信息，错误返回空 """
+    the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == int(uid)).first()
     if not the_user:
         return {}
+
     if type(the_user.devices) == str:
         the_user.devices = the_user.devices.split()
         the_user.devices = list(map(int,the_user.devices))
     else:
-        pass
+        logger.info("取得用户{uid}信息时，其设备列表不为字典")
+
     the_user_in_dict = {
         "uid":the_user.uid,
         "name":the_user.name,
@@ -68,63 +69,61 @@ def get_user_from_db_by_id(uid: int) -> dict:
     }
     return the_user_in_dict
 
-@log_handler
-def get_all_user_uid_from_db() -> List:
-
-    #直接去生成全部的用户实例效率太低，使用RAW SQL查询列表
+def get_all_user_uid_from_db() -> List[int]:
+    
     with engine.connect() as con:
         result_raw = con.execute('SELECT uid FROM users')
-        results = []
-        for item in result_raw:
-            results.append(item[0])
-    return results
+        result_raw = list(result_raw)
+        return [ item[0] for item in result_raw ]
 
-@log_handler
-def update_user_to_db(user_model):
+
+def update_user_to_db(user_model: dict):
+    """ 更新用户数据到数据库 """
     if user_model['uid'] == None:
-        logger.error(f"请求的用户{user_model['name']} 更新时UID字段不存在")
-        return (False,402,f"请求的用户{user_model['name']} 更新时UID字段不存在",{})
+        hint = f"写入用户信息是UID字段不存在"
+        logger.error(hint)
+        return (False,402,hint,{})
     else:
-        the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == user_model['uid']).first()
+        user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == int(user_model['uid'])).first()
 
-        if the_user == None:
-            logger.error(f"请求的UID{user_model['uid']} 不在数据库中")
-            return (False,402,f"请求的UID{user_model['uid']} 不在数据库中",{})
+        if user == None:
+            hint = f"请求更新的用户不在数据库中"
+            logger.error(hint)
+            return (False,402,hint,{})
 
-        the_user.name = user_model['name']
-        the_user.password = user_model['password']
-        the_user.privilege = user_model['privilege']
+        user.name = user_model['name']
+        user.password = user_model['password']
+        user.privilege = user_model['privilege']
         #记得将数组转换为字符串
         if type(user_model['devices']) == list:
-            logger.debug(f"更新用户{user_model['name']} ,正在转换字符串")
+
             user_model['devices'] = " ".join(map(str,user_model['devices']))
-        the_user.devices = user_model['devices']
+            user.devices = user_model['devices']
+            session.commit() #提交修改
 
-        session.commit() #提交修改
-        return (True,0,f"更新用户{user_model['name']}成功",{})
-      
+            hint = f"更新用户 {user.uid} 成功"
+            logger.info(hint)
+            return (True,0,hint,{})
+        else:
+            hint = f"请求更新的用户 {user.uid} 设备列表为{type(user.devices)},应为list"
+            logger.error(hint)
+            return (False,402,hint,{})
+        
 
-@log_handler
-def delete_user_from_db(uid: int) -> bool:
+def delete_user_from_db(uid: int) -> Tuple[bool,int,str,dict]:
     the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == uid).first()
     if not the_user:
-        #所删除的用户不存在
-        logger.error(f"请求删除的用户：{uid} 不存在")
-        return (False,402,f"请求删除的用户：{uid} 不存在",{})
-
-    session.delete(the_user)
-    session.commit()
-    the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == uid).first()
-    if not the_user:
+        hint = f"请求删除的用户：{uid} 不存在"
+        logger.error(hint)
+        return (False,402,hint,{})
+    else:
+        session.delete(the_user)
+        session.commit()
         logger.info(f"请求删除的用户：{uid} 成功")
         return (True,0,f"请求删除的用户：{uid} 成功",{})
-    else:
-        logger.error(f"请求删除的用户：{uid} 失败，请检查")
-        return (False,-1,f"请求删除的用户：{uid} 失败，请检查",{})
 
 
-OrmBase.metadata.create_all(engine)
+
 if __name__ == '__main__':
     #文件测试区
-    print(get_all_user_uid_from_db())
     pass

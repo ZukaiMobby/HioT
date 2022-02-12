@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
-from rich import print
+
 
 
 class ModelDeviceType(BaseModel):
@@ -17,5 +17,6 @@ class ModelCreateDeviceType(BaseModel):
     default_config: Optional[dict]
 
 if __name__ == '__main__':
+    from rich import print
     # 功能测试区
     pass

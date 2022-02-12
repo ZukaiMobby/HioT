@@ -8,10 +8,11 @@ logger = get_logger(name="main",
                     file_path=global_config['log_file_path'],
                     file_colorful=False)
 
+logger.__enter__()
 
 def log_handler(target):
     """ 添加日志运行时 """
-    """ 原来函数有什么我就返回什么 """
+    """ 2022年2月11日21:30:38 过期的，不应再被调用 """
     def func(*args, **kwargs) -> Any:
         logger.__enter__()
         return target(*args, **kwargs)

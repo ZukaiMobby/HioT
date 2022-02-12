@@ -35,6 +35,7 @@ def register_a_device(new_device_info: ModelRegisterDevice):
         }
         
         dev = ModelDevice(**gen_dev)
+        
         return add_device_to_db(dev.dict())
     result = gen_dev_and_add_db(new_device_info)
     return {

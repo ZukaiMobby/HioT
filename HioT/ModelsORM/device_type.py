@@ -1,7 +1,7 @@
 import json
 from types import NoneType
 
-from typing import List
+from typing import List, Tuple
 from sqlalchemy import Column, Integer, String
 
 from HioT.Database.sqliteDB import OrmBase, session, engine
@@ -9,14 +9,8 @@ from HioT.Models.device import ModelDevice
 from HioT.Models.user import ModelUser
 from HioT.ModelsORM.device import delete_device_from_db, get_device_from_db_by_id
 from HioT.ModelsORM.user import get_user_from_db_by_id
-from HioT.Plugins.get_logger import log_handler, logger
+from HioT.Plugins.get_logger import logger
 
-# class ModelDeviceType(BaseModel):
-#     device_type_id: Optional[int]
-#     device_type_name: str
-#     description: Optional[str]
-#     data_item: Optional[dict] #in json
-#     default_config: Optional[str] #配置应该在新建设备类型的时候完成
 
 
 class ORMDeviceType(OrmBase):
@@ -35,106 +29,114 @@ class ORMDeviceType(OrmBase):
 
 OrmBase.metadata.create_all(engine)
 
-@log_handler
-def add_device_type_to_db(device_type_model: dict) -> bool:
+
+def add_device_type_to_db(type_info: dict) -> Tuple[bool,int,str,dict]:
     """ 从ModelDeviceType中抽取并插入数据库 """
-    if device_type_model['device_type_id'] == None:
+    if type_info['device_type_id'] == None:
         #新建一个设备类型
 
-        if type(device_type_model['data_item']) == None:
-            logger.error(f"保存设备类型时出错：必须存在至少一个数据项")
-            return (False,332,f"保存设备类型时出错：必须存在至少一个数据项",{})
-        if type(device_type_model['data_item']) == dict:
-            device_type_model['data_item'] = json.dumps(device_type_model['data_item'])
-        else:
-            logger.error(f"保存设备类型时出错：数据项必须是字典类型")
-            return (False,332,f"保存设备类型时出错：数据项必须是字典类型",{})
-        if type(device_type_model['default_config']) == dict:
-            device_type_model['default_config'] = json.dumps(device_type_model['default_config'])
+        if not type_info['data_item']:
+            hint = f"新增设备类型出错：必须存在至少一个数据项"
+            logger.error(hint)
+            return (False,332,hint,{})
 
-        if type(device_type_model['data_item']) != str:
-            logger.error(f"保存设备类型时出错：无法从 {type(device_type_model['data_item'])} 转换为 str")
-            return (False,332,f"保存设备类型时出错：无法从 {type(device_type_model['data_item'])} 转换为 str",{})
-        if type(device_type_model['default_config']) != NoneType:
-            if type(device_type_model['default_config']) != str:
-                logger.error(f"保存设备类型时出错：无法从 {type(device_type_model['default_config'])} 转换为 str")
-                return (False,332,f"保存设备类型时出错：无法从 {type(device_type_model['default_config'])} 转换为 str",{})
+        elif type(type_info['data_item']) == dict:
+            type_info['data_item'] = json.dumps(type_info['data_item'])
+        else:
+            hint = f"新增设备类型出错：数据项必须是字典类型"
+            logger.error(hint)
+            return (False,332,hint,{})
+
+        if type_info['default_config'] and type(type_info['default_config']) == dict:
+            type_info['default_config'] = json.dumps(type_info['default_config'])
+        else:
+            hint = f"新增设备类型出错：default_config 为{type(type_info['default_config'])}"
+            logger.error(hint)
+            return (False,332,hint,{})
 
         device_type_in_dict = {
-        "device_type_name": device_type_model['device_type_name'],
-        "description":device_type_model['description'],
-        "data_item":device_type_model['data_item'],
-        "default_config":device_type_model['default_config']}
+            "device_type_name": type_info['device_type_name'],
+            "description":type_info['description'],
+            "data_item":type_info['data_item'],
+            "default_config":type_info['default_config']
+        }
+
+        
         the_device_type = ORMDeviceType(**device_type_in_dict)
         session.add(the_device_type)
         session.commit()
-        logger.info("新增设备类型： "+str(the_device_type))
-        return (True,0,f"新增设备类型：{str(the_device_type)} ",{"device_type_id":the_device_type.device_type_id})
+
+        hint = f"新增设备类型:{str(the_device_type)}"
+        data = {"device_type_id":the_device_type.device_type_id}
+
+        logger.info(hint)
+        return (True,0,hint,data)
 
     else:
-        logger.error(f"请求的用户{device_type_model['device_type_name']} 添加时存在device_type_id字段")
-        return (False,332,f"请求的用户{device_type_model['device_type_name']} 添加时存在device_type_id字段",{})
+        hint = f"请求的用户{type_info['device_type_name']} 添加时存在device_type_id字段"
+        logger.error(hint)
+        return (False,332,hint,{})
 
 
-@log_handler
+
 def get_device_type_from_db_by_id(device_type_id: int) -> dict:
     if type(device_type_id) != int:
         logger.error(f"请求获得的设备类型时应是int，而非{type(device_type_id)}")
         return {}
+
     the_device_type: ORMDeviceType = session.query(ORMDeviceType).\
         filter(ORMDeviceType.device_type_id == device_type_id).first()
 
     if not the_device_type:
         logger.error(f"请求获得的设备类型{device_type_id} 不存在")
         return {}
-    the_default_config = None
-    if type(the_device_type.default_config) == NoneType:
-        pass
-    elif type(the_device_type.default_config) == str:
-        the_default_config = json.loads(the_device_type.default_config)
-    else:
-        logger.error(f"设备类型默认配置转换出错：{type(the_device_type.default_config)},应为str或者None")
+
+    try:
+        data_item = json.loads(the_device_type.data_item)
+        default_config = json.loads(the_device_type.default_config)
+    except json.JSONDecodeError:
+        logger.error(f"DB中设备类型Json格式转换错误")
+        return {}
+    except TypeError:
+        logger.error(f"DB中设备类型不支持JSON转换的格式")
+        return {}
 
     the_device_type_in_dict = {
-    "device_type_id":the_device_type.device_type_id,
-    "device_type_name":the_device_type.device_type_name,
-    "description":the_device_type.description,
-    "data_item":json.loads(the_device_type.data_item),
-    "default_config":the_default_config}
-    logger.info(f"设备类型获取成功:{the_device_type.device_type_id}")
+        "device_type_id":the_device_type.device_type_id,
+        "device_type_name":the_device_type.device_type_name,
+        "description":the_device_type.description,
+        "data_item":data_item,
+        "default_config":default_config
+    }
+
+    hint = f"设备类型获取成功:{the_device_type.device_type_id}"
+    logger.info(hint)
     return the_device_type_in_dict
 
-
-@log_handler
-def update_device_type_to_db(user_model) -> bool:
-    logger.error("设备类型不能被更新，请删除类型并重建")
-    return (False,400,"设备类型不能被更新，请删除类型并重建",{})
-        
-@log_handler
 
 def get_all_device_type_from_db():
     with engine.connect() as con:
         result_raw = con.execute('SELECT device_type_id FROM DeviceType')
-        if type(result_raw) == NoneType:
+        if not result_raw:
             return []
-        results = []
-        for item in result_raw:
-            results.append(item[0])
-    return results
+        return [ tid[0] for tid in result_raw]
 
-@log_handler
-def delete_device_type_from_db(device_type_id: int) -> bool:
-    logger.warning("删除设备类型将导致所有该类型设备的历史数据丢失、所有设备需要重新配置并连接..")
+
+def delete_device_type_from_db(device_type_id: int) -> Tuple[bool,int,str,dict]:
+    logger.warning("删除设备类型将同时删除该类型的设备及其连接!")
 
     if type(device_type_id) != int:
-        logger.error(f"请求获得的设备类型时应是int，而非{type(device_type_id)}")
-        return (False,541,f"请求获得的设备类型时应是int，而非{type(device_type_id)}",{})
-    the_device_type: ORMDeviceType = session.query(ORMDeviceType).\
-        filter(ORMDeviceType.device_type_id == device_type_id).first()
+
+        hint = f"请求获得的设备类型时应是int，而非{type(device_type_id)}"
+        logger.error(hint)
+        return (False,541,hint,{})
+
+    the_device_type: ORMDeviceType = session.query(ORMDeviceType).filter(ORMDeviceType.device_type_id == device_type_id).first()
 
     if not the_device_type:
-        logger.error(f"请求获得的设备类型{device_type_id} 不存在")
-        return (False,541,f"请求获得的设备类型{device_type_id} 不存在",{})
+        hint = f"请求获得的设备类型{device_type_id} 不存在"
+        logger.error(hint)
+        return (False,541,hint,{})
 
     session.delete(the_device_type)
     session.commit()
@@ -142,33 +144,55 @@ def delete_device_type_from_db(device_type_id: int) -> bool:
     the_device_type: ORMDeviceType = session.query(ORMDeviceType).\
         filter(ORMDeviceType.device_type_id == device_type_id).first()
     
-    if type(the_device_type) == NoneType:
-        logger.info(f"请求删除的设备类型{device_type_id} 成功")
+    if not the_device_type:
+
+        logger.info(f"请求删除的设备类型 {device_type_id} 成功")
 
         with engine.connect() as con:
             result_raw = con.execute(f'SELECT did from Device where device_type_id == {device_type_id}')
             result_raw = list(result_raw)
-            if len(result_raw) != 0:
-                for item in result_raw:
-                    did = item[0]
-                    logger.info(f"正在删除设备 {did}并解绑用户 ")
+
+            did_list = [ item[0] for item in result_raw]
+
+            if did_list: #设备类型绑定了设备
+                for did in did_list:
+
+                    logger.info(f"正在删除设备 {did} 并解绑用户 ")
                     the_device_info = get_device_from_db_by_id(did)
-                    the_device = ModelDevice(**the_device_info)
 
-                    if the_device.bind_user != None:
-                        print(the_device.bind_user)
-                        user_info = get_user_from_db_by_id(the_device.bind_user)
-                        the_user = ModelUser(**user_info)
-                        the_user.unbind_device(did)
+                    if the_device_info:  #设备信息查询成功
+                        the_device = ModelDevice(**the_device_info)
 
-                    delete_device_from_db(did)
+                        if the_device.bind_user != None:
+                            user_info = get_user_from_db_by_id(the_device.bind_user)
 
+                            if user_info:
 
-        return (True,0,f"请求删除的设备类型{device_type_id} 成功",{})
+                                the_user = ModelUser(**user_info)
+                                the_user.unbind_device(did)
+                            else:
+                                logger.info(f"设备绑定了一个不存在的用户 {the_device.bind_user} ")
+                        else:
+                            logger.info(f"设备{the_device.did}没有绑定用户")
+
+                        delete_device_from_db(did)
+                    else:
+                        hint = f"请求删除的设备 {did} 查询为空"
+                        logger.error(hint)
+                        return (False,541,hint,{})
+
+            else:
+                logger.info(f"设备类型 {device_type_id} 没有绑定设备")
+
+        hint = f"请求删除的设备类型{device_type_id} 成功"
+        logger.info(hint)
+        return (True,0,hint,{})
+
     else:
-        logger.error(f"请求删除的设备类型{device_type_id} 失败")
-        return (False,541,f"请求删除的设备类型{device_type_id} 失败",{})
+        hint = f"请求删除的设备类型{device_type_id} 失败"
+        logger.error(hint)
+        return (False,541,hint,{})
 
 if __name__ == '__main__':
     pass
-    #delete_device_type_from_db(1)
+
