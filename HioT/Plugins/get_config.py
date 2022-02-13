@@ -24,3 +24,4 @@ config: Dict = load_config()
 global_config = config['global']
 influxDB_config = config['influxDB']
 uvicorn_config = config['uvicorn']
+mqtt_config = config['mqtt']

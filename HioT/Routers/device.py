@@ -1,3 +1,4 @@
+from datetime import datetime
 from starlette.requests import Request
 from fastapi import APIRouter
 from HioT.Models.device import ModelDeviceChangeStatus, ModelRegisterDevice
@@ -61,5 +62,4 @@ def put_device_config(did:int,new_config:dict):
 @router.put('/{did}/update',response_model=CommonResponseModel)
 def update_device_data_item(did:int, data_item:dict, request: Request):
     """ 此接口由设备调用,用来更新数据 """
-
     return device.update_device_data_item(did,data_item,request)

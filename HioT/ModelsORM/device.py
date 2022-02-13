@@ -1,10 +1,11 @@
+from datetime import datetime
 from ipaddress import AddressValueError, IPv4Address, IPv6Address
 import ipaddress
 import json
 from types import NoneType
 
 from typing import List, Tuple
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Float, Integer, String, Boolean
 
 from HioT.Database.sqliteDB import OrmBase, session, engine
 from HioT.Plugins.get_logger import logger
@@ -30,6 +31,7 @@ class ORMDevice(OrmBase):
 
     protocol = Column(Integer)
 
+    last_vist = Column(Float)
     config = Column(String)  # 应为序列化之后的json
     data_item = Column(String)  # 应为序列化之后的json
 
@@ -67,6 +69,7 @@ def check_old_new_data_item(old: dict, new: dict, did: int) -> bool:
 def add_device_to_db(device_model: dict ) -> Tuple[bool,int,str,dict]:
     """ 向数据库写入一个新设备 """
 
+    data = {} #服务器稍后返回的数据
     if device_model['did'] != None:
         hint = f"新增设备时: 不应存在did"
         logger.error(hint)
@@ -121,9 +124,8 @@ def add_device_to_db(device_model: dict ) -> Tuple[bool,int,str,dict]:
             except AddressValueError:
                 hint = "新增MQTT设备时: IPV6不存在"
                 logger.info(hint)
-
+            
             #MQTT 在这里进行前提验证
-            pass
         
         else:
             hint = "新增设备时: 用户选择了未知协议"
@@ -133,8 +135,15 @@ def add_device_to_db(device_model: dict ) -> Tuple[bool,int,str,dict]:
         session.add(the_device)
         session.commit()
 
+        if the_device.protocol == 1:
+            from HioT.Plugins.get_config import mqtt_config
+            data["broker"] = mqtt_config['host']
+            data["bport"] = mqtt_config['port']
+            data["publish_topic"] = f"did{the_device.did}publish"   #设备publish的参数【平台的subscribe】
+            data["subscribe_topic"] = f"did{the_device.did}subscribe" #设备订阅参数
+
         hint = f"新增设备：{str(the_device)} "
-        data = {"did":the_device.did}
+        data["did"] = the_device.did
         logger.info(hint)
         return (True,0,hint,data)
 
@@ -176,6 +185,7 @@ def get_device_from_db_by_id(did: int) -> dict:
         "v4port":device.v4port,
         "v6port":device.v6port,
         "protocol":device.protocol,
+        "last_vist":datetime.fromtimestamp(device.last_vist),
 
         "config": config,
         "data_item": data_item
@@ -184,7 +194,6 @@ def get_device_from_db_by_id(did: int) -> dict:
 
 
     return device_in_dict
-
 
 
 def update_device_data_item_to_db(device_model:dict) -> Tuple[bool,int,str,dict]:
@@ -264,6 +273,8 @@ def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
         logger.error(hint)
         return (False,100,hint,{})
 
+    time = datetime.timestamp(device_model['last_vist'])
+
     device.bind_user = device_model['bind_user']
     device.device_description = device_model['device_description']
     device.device_name = device_model['device_name']
@@ -272,6 +283,7 @@ def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
     device.v4port = device_model['v4port']
     device.v6port = device_model['v6port']
     device.keep_alive = device_model['keep_alive']
+    device.last_vist = time
     
     if device.protocol == 2:
         try:

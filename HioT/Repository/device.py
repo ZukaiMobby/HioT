@@ -1,3 +1,4 @@
+from datetime import datetime
 import ipaddress
 from starlette.requests import Request
 from HioT.Database.influxDB import influx_query_by_device
@@ -32,11 +33,7 @@ def register_a_device(new_device_info: ModelRegisterDevice,request:Request):
         dev_info = get_device_type_from_db_by_id(new_device_info.device_type_id)
 
         if dev_info == {}:
-            return {
-                "errno":403,
-                "message": f"设备类型 {new_device_info.device_type_id} 不存在",
-                "data":{}
-                }
+            return (False,403,f"设备类型 {new_device_info.device_type_id} 接口返回空",{})
 
         if is_v4:
             gen_dev = {
@@ -62,7 +59,9 @@ def register_a_device(new_device_info: ModelRegisterDevice,request:Request):
         dev = ModelDevice(**gen_dev)
         
         return add_device_to_db(dev.dict())
+
     result = gen_dev_and_add_db(new_device_info)
+    print(result)
     return {
         "errno":result[1],
         "message":result[2],
@@ -209,7 +208,6 @@ def put_device_config(did:int,new_config):
 
 def update_device_data_item(did:int,data_item:dict,request):
     
-    print(data_item)
 
     device_info = get_device_from_db_by_id(did)
     if device_info == {}:
@@ -221,6 +219,17 @@ def update_device_data_item(did:int,data_item:dict,request):
         
     the_device = ModelDevice(**device_info)
     the_device.data_item = data_item
+    the_device.last_vist = datetime.now()
+
+    result = update_device_status_to_db(the_device.dict())
+
+    if not result[0]:
+        return {
+            "errno":result[1],
+            "message":result[2],
+            "data":result[3]
+        }
+        
     result = update_device_data_item_to_db(the_device.dict())
     return {
         "errno":result[1],

@@ -8,7 +8,7 @@ with logger:
     logger.debug("数据库程序执行路径："+os.path.abspath("__file__"))
     database_path = "sqlite:///./" + \
         global_config['database_file_path']+'/' + \
-        global_config['database_file_name']
+        global_config['database_file_name']+'?check_same_thread=False'
 
     logger.debug(f"数据库完整路径: {database_path}")
 
