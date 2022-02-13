@@ -42,8 +42,8 @@ def register_a_device(new_device_info: ModelRegisterDevice,request:Request):
             gen_dev = {
                 "device_type_id" : dev_info['device_type_id'],
                 "keep_alive":dev_info['keep_alive'],
-                "ipv4":int(ip),
-                "v4port":int(port),
+                "ipv4":int(ipaddress.IPv4Address(ip)),
+                "v4port":dev_info['v4port'],
                 "protocol":dev_info['protocol'],
                 "config": dev_info['default_config'],
                 "data_item": dev_info['data_item'],
@@ -52,8 +52,8 @@ def register_a_device(new_device_info: ModelRegisterDevice,request:Request):
             gen_dev = {
                 "device_type_id" : dev_info['device_type_id'],
                 "keep_alive":dev_info['keep_alive'],
-                "ipv6":int(ip),
-                "v6port":int(port),
+                "ipv6":int(ipaddress.IPv6Address(ip)),
+                "v6port":dev_info['v6port'],
                 "protocol":dev_info['protocol'],
                 "config": dev_info['default_config'],
                 "data_item": dev_info['data_item'],
@@ -104,17 +104,17 @@ def change_a_device_status(new_device_status_info:ModelDeviceChangeStatus,did:in
         elif k == 'device_description':
             the_device.device_description = v
 
-        elif k == 'keep_alive':
-            the_device.keep_alive = v
+        elif k == 'keep_alive' and v :
+            the_device.keep_alive = int(v)
 
-        elif k == 'v4port':
-            the_device.v4port = v
+        elif k == 'v4port' and v :
+            the_device.v4port = int(v)
         
-        elif k == 'v6port':
-            the_device.v6port = v
+        elif k == 'v6port' and v:
+            the_device.v6port = int(v)
 
-        elif k == 'protocol':
-            the_device.protocol = v
+        elif k == 'protocol' and v:
+            the_device.protocol = int(v)
 
         else:
             pass

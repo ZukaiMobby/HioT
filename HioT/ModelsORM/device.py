@@ -1,3 +1,5 @@
+from ipaddress import AddressValueError, IPv4Address, IPv6Address
+import ipaddress
 import json
 from types import NoneType
 
@@ -89,6 +91,45 @@ def add_device_to_db(device_model: dict ) -> Tuple[bool,int,str,dict]:
             return (False,501,hint,{})
 
         the_device = ORMDevice(**device_model)
+
+        # the_device.ipv4 = int(IPv4Address(the_device.ipv4))
+        # the_device.ipv6 = int(IPv6Address(the_device.ipv6))
+
+        if the_device.protocol == 2:
+            try:
+                the_device.ipv4 = int(IPv4Address(the_device.ipv4))
+            except AddressValueError:
+                hint = "新增设备时: IPV4解析失败"
+                logger.error(hint)
+                return (False,501,hint,{})
+        elif the_device.protocol == 3:
+            try:
+                the_device.ipv6 = int(IPv6Address(the_device.ipv6))
+            except AddressValueError:
+                hint = "新增设备时: IPV6解析失败"
+                logger.error(hint)
+                return (False,501,hint,{})
+        elif the_device.protocol == 1:
+            try:
+                the_device.ipv4 = int(IPv4Address(the_device.ipv4))
+            except AddressValueError:
+                hint = "新增MQTT设备时: IPV4不存在"
+                logger.info(hint)
+
+            try:
+                the_device.ipv6 = int(IPv6Address(the_device.ipv6))
+            except AddressValueError:
+                hint = "新增MQTT设备时: IPV6不存在"
+                logger.info(hint)
+
+            #MQTT 在这里进行前提验证
+            pass
+        
+        else:
+            hint = "新增设备时: 用户选择了未知协议"
+            logger.error(hint)
+            return (False,501,hint,{})
+
         session.add(the_device)
         session.commit()
 
@@ -130,8 +171,8 @@ def get_device_from_db_by_id(did: int) -> dict:
 
         "online":device.online,
         "keep_alive":device.keep_alive,
-        "ipv4":int(device.ipv4),
-        "ipv6":int(device.ipv6),
+        "ipv4":device.ipv4, #######
+        "ipv6":device.ipv6,
         "v4port":device.v4port,
         "v6port":device.v6port,
         "protocol":device.protocol,
@@ -140,6 +181,8 @@ def get_device_from_db_by_id(did: int) -> dict:
         "data_item": data_item
 
     }
+
+
     return device_in_dict
 
 
@@ -202,6 +245,8 @@ def update_device_data_item_to_db(device_model:dict) -> Tuple[bool,int,str,dict]
 
 
 def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
+    from rich import print
+    
 
     try:
         did = int(device_model['did'])
@@ -213,7 +258,7 @@ def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
         return (False,403,hint,{})
 
     device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
-
+    
     if not device:
         hint = f"更新设备status时出错: {did} 不存在"
         logger.error(hint)
@@ -224,12 +269,25 @@ def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
     device.device_name = device_model['device_name']
     device.online = device_model['online']
     device.protocol = device_model['protocol']
-    device.ipv4 = int(device_model['ipv4'])
-    device.ipv6 = int(device_model['ipv6'])
-    device.v4port = device_model['v4port'],
-    device.v6port = device_model['v6port'],
+    device.v4port = device_model['v4port']
+    device.v6port = device_model['v6port']
     device.keep_alive = device_model['keep_alive']
-
+    
+    if device.protocol == 2:
+        try:
+            device.ipv4 = int(IPv4Address(device_model['ipv4']))
+        except ipaddress.AddressValueError:
+            hint = f"更新设备status时出错: 试图使用IPV4协议，但设备IPV4地址不合法"
+            logger.error(hint)
+            return (False,100,hint,{})
+    elif device.protocol == 3:
+        try:
+            device.ipv6 = int(IPv6Address(device_model['ipv6']))
+        except ipaddress.AddressValueError:
+            hint = f"更新设备status时出错: 试图使用IPV6协议，但设备IPV6地址不合法"
+            logger.error(hint)
+            return (False,100,hint,{})
+    
     session.commit()
 
     hint = f"更新设备status: {did} status已更新"

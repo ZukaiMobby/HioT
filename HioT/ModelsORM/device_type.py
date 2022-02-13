@@ -115,8 +115,9 @@ def add_device_type_to_db(type_info: dict) -> Tuple[bool,int,str,dict]:
             "v6port":type_info['v6port'],
             "protocol":type_info['protocol']
         }
+        from rich import print
+        print(device_type_in_dict)
 
-        
         the_device_type = ORMDeviceType(**device_type_in_dict)
         session.add(the_device_type)
         session.commit()
@@ -160,8 +161,14 @@ def get_device_type_from_db_by_id(device_type_id: int) -> dict:
         "device_type_id":the_device_type.device_type_id,
         "device_type_name":the_device_type.device_type_name,
         "description":the_device_type.description,
+        "keep_alive":the_device_type.keep_alive,
+        "v4port":the_device_type.v4port,
+        "v6port":the_device_type.v6port,
+        "protocol":the_device_type.protocol,
+
         "data_item":data_item,
         "default_config":default_config
+
     }
 
     hint = f"设备类型获取成功:{the_device_type.device_type_id}"

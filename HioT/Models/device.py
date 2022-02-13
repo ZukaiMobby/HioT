@@ -19,10 +19,10 @@ class ModelDevice(BaseModel):
     keep_alive:Optional[int] # 超过这段时间没有通信过判为失活
 
     ipv4: Optional[IPv4Address] #IPV4 地址支持(实际上是int)
-    v4port: Optional[PositiveInt] #IPV4 通信端口(还是int)
+    v4port: Optional[int] #IPV4 通信端口(还是int)
 
     ipv6: Optional[IPv6Address] #IPV6 地址支持(实际还是int)
-    v6port: Optional[PositiveInt] #IPV6 通信端口(还是int)
+    v6port: Optional[int] #IPV6 通信端口(还是int)
 
     protocol:Optional[int] #设备选择的协议
 
