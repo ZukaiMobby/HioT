@@ -10,6 +10,8 @@ from sqlalchemy import Column, Float, Integer, String, Boolean
 from HioT.Database.sqliteDB import OrmBase, session, engine
 from HioT.Plugins.get_logger import logger
 
+
+
 class ORMDevice(OrmBase):
     # 设备实例存储位置，其中的数据应该是为当前值
 
@@ -68,7 +70,7 @@ def check_old_new_data_item(old: dict, new: dict, did: int) -> bool:
 
 def add_device_to_db(device_model: dict ) -> Tuple[bool,int,str,dict]:
     """ 向数据库写入一个新设备 """
-
+    from HioT.Plugins.mqtt import add_new_dev_to_subscribe
     data = {} #服务器稍后返回的数据
     if device_model['did'] != None:
         hint = f"新增设备时: 不应存在did"
@@ -141,6 +143,9 @@ def add_device_to_db(device_model: dict ) -> Tuple[bool,int,str,dict]:
             data["bport"] = mqtt_config['port']
             data["publish_topic"] = f"did{the_device.did}publish"   #设备publish的参数【平台的subscribe】
             data["subscribe_topic"] = f"did{the_device.did}subscribe" #设备订阅参数
+            data["will_message"] = f"did{the_device.did}offline"
+            add_new_dev_to_subscribe(the_device.did)
+
 
         hint = f"新增设备：{str(the_device)} "
         data["did"] = the_device.did
@@ -171,6 +176,13 @@ def get_device_from_db_by_id(did: int) -> dict:
         logger.error(f"获取设备 {did} 时，数据项或配置项类型错误")
         return {}
 
+
+    if device.last_vist != None:
+        last_visit = datetime.fromtimestamp(device.last_vist)
+    else:
+        last_visit = None
+    
+
     device_in_dict = {
         "did": device.did,
         "device_type_id": device.device_type_id,
@@ -185,8 +197,7 @@ def get_device_from_db_by_id(did: int) -> dict:
         "v4port":device.v4port,
         "v6port":device.v6port,
         "protocol":device.protocol,
-        "last_vist":datetime.fromtimestamp(device.last_vist),
-
+        "last_vist":last_visit,
         "config": config,
         "data_item": data_item
 
@@ -327,13 +338,18 @@ def update_device_config_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
 
     hint = f"写入设备 {did} 配置成功"
     logger.info(hint)
-    return (True,0,hint,{})
 
-def device_config_push_to_device():
-    pass
+    if device_model['protocol'] == 1:
+        from HioT.Plugins.mqtt import push_config_to_device
+        logger.info("MQTT开始推送配置")
+        push_config_to_device(did,config)
+
+
+    return (True,0,hint,{})
 
 
 def delete_device_from_db(did: int) -> Tuple[bool,int,str,dict]:
+    from HioT.Plugins.mqtt import remove_dev_from_subscribe
     try:
         did = int(did)
 
@@ -347,6 +363,8 @@ def delete_device_from_db(did: int) -> Tuple[bool,int,str,dict]:
         hint = f"删除设备时出错：设备{did}不存在"
         logger.error(hint)
         return (False,401,hint,{})
+    if the_device.protocol == 1:
+        remove_dev_from_subscribe(did)
 
     session.delete(the_device)
     session.commit()

@@ -1,10 +1,8 @@
-import json
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
-from pytz_deprecation_shim import UTC
 from HioT.Models.device import ModelDevice
-from HioT.ModelsORM.device import ORMDevice, get_all_device_did, get_device_from_db_by_id
+from HioT.ModelsORM.device import get_all_device_did, get_device_from_db_by_id
 from HioT.Plugins.get_logger import logger
 
 
@@ -30,21 +28,40 @@ def v46_check_online():
         else:
             if dev['protocol'] == 2 or dev['protocol'] == 3:
                 device =  ModelDevice(**dev)
-                if device.check_online():
+                
+                if device.last_vist and device.check_online():
                     logger.info(f"设备 {device.did} 状态发生变化")
 
 scheduler.add_job(func=v46_check_online, trigger='interval', seconds=10)
-    #使用装饰器的方式进行调度
-    #scheduler.add_job(id=job_id, func=job, args=(job_id,), trigger='interval', seconds=2)
-    # @scheduler.scheduled_job(trigger='interval', seconds=3,args=(4,))
-    # def job(num):
-    #     print(f"....{num}.....")
 
-    # for i in range(10):
-    #     sleep(3)
 
-    # @app.post('/remove-job')
-    # async def remove_job(job_id: str = Body(..., embed=True)):
-    # """移除job"""
-    # scheduler.remove_job(job_id)
-    # return {"msg": "success!"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#使用装饰器的方式进行调度
+#scheduler.add_job(id=job_id, func=job, args=(job_id,), trigger='interval', seconds=2)
+# @scheduler.scheduled_job(trigger='interval', seconds=3,args=(4,))
+# def job(num):
+#     print(f"....{num}.....")
+
+# for i in range(10):
+#     sleep(3)
+
+# @app.post('/remove-job')
+# async def remove_job(job_id: str = Body(..., embed=True)):
+# """移除job"""
+# scheduler.remove_job(job_id)
+# return {"msg": "success!"}

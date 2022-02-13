@@ -10,7 +10,7 @@ colorful-logger
 influxdb-client
 paho-mqtt
 apscheduler
-
+requests
 #dev env 
 pylint
 pyyaml

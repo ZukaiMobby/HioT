@@ -64,8 +64,6 @@ class ModelDevice(BaseModel):
         return update_device_status_to_db(self.dict())
         
 
-
-
 class ModelRegisterDevice(BaseModel):
     device_type_id: int  # 设备所属类型
     # device_auth_token: Optional[str] #设备认证口令，保留备用

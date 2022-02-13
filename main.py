@@ -2,13 +2,15 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.responses import FileResponse
 
-from HioT.Plugins.check_env import check_for_initialize
+#from HioT.Plugins.check_env import check_for_initialize
 from HioT.Plugins.get_config import *
 from HioT.Plugins.scheduler import scheduler
+import HioT.Plugins.mqtt 
 from HioT.Routers import device as route_device
 from HioT.Routers import sdk as route_sdk
 from HioT.Routers import setting as route_setting
 from HioT.Routers import user as route_user
+
 
 app = FastAPI()
 info = '''
