@@ -339,12 +339,6 @@ def update_device_config_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
     hint = f"写入设备 {did} 配置成功"
     logger.info(hint)
 
-    if device_model['protocol'] == 1:
-        from HioT.Plugins.mqtt import push_config_to_device
-        logger.info("MQTT开始推送配置")
-        push_config_to_device(did,config)
-
-
     return (True,0,hint,{})
 
 

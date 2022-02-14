@@ -7,6 +7,7 @@ from HioT.Models.user import ModelUser
 from HioT.ModelsORM.device import add_device_to_db, delete_device_from_db, get_all_device_did, get_device_from_db_by_id, update_device_config_to_db, update_device_data_item_to_db, update_device_status_to_db
 from HioT.ModelsORM.device_type import get_device_type_from_db_by_id
 from HioT.ModelsORM.user import get_user_from_db_by_id
+from HioT.Plugins.mqtt import push_config_to_device
 
 def get_all_device():
     """ 获取所有设备id，包括所有已经注册的设备 """
@@ -199,6 +200,9 @@ def put_device_config(did:int,new_config):
         
     the_device = ModelDevice(**device_info)
     the_device.config = new_config
+
+    push_config_to_device(did,new_config)
+
     result = update_device_config_to_db(the_device.dict())
     return {
         "errno":result[1],
@@ -208,7 +212,6 @@ def put_device_config(did:int,new_config):
 
 def update_device_data_item(did:int,data_item:dict,request):
     
-
     device_info = get_device_from_db_by_id(did)
     if device_info == {}:
         return {

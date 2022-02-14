@@ -7,19 +7,6 @@ def on_connect(client, userdata, flags, rc):
     #定义实践调用函数
     print("Connected with result code: " + str(rc))
 
-def on_message(client, userdata, msg):
-    print(msg.topic + " " + str(msg.payload))
-
-# p = {
-#     "ee":"we"
-# }
-
-# client = mqtt.Client()
-# client.on_connect = on_connect
-# client.on_message = on_message
-# client.connect('127.0.0.1', 1883, 600) # 600为keepalive的时间间隔
-# client.publish('fifa', payload=json.dumps(p), qos=0)
-
 temp = 0.0
 humi = 0.0
 
@@ -50,8 +37,22 @@ def register():
     with open("config.pkl","wb") as f:
         pickle.dump(from_server_config,f)
 
-def work():
-    pass
+
+def on_message(client, userdata, msg):
+    global device_config
+    if msg.payload:
+        try:
+            config:dict = json.loads(msg.payload)
+        except json.JSONDecodeError:
+            print("收到了不可解析的json数据")
+            return
+
+    device_config = config
+
+    from rich import print
+    print("新的配置数据")
+    print(device_config)
+
 
 if __name__ == '__main__':
     from rich import print
@@ -73,12 +74,18 @@ if __name__ == '__main__':
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
-    client.connect('127.0.0.1', 1883, 30)
+    client.connect('127.0.0.1', 1883, 600)
+    client.subscribe(from_server_config['subscribe_topic'],0)
+    print(f"订阅配置推送：{from_server_config['subscribe_topic']}")
+    
     temp = random.uniform(30.1,66.4)
     humi = random.uniform(50.1,96.4)
-    while True:
-        temp = random.uniform(30.1,66.4)
-        humi = random.uniform(50.1,96.4)
-        client.publish(from_server_config['publish_topic'], 
-        payload=json.dumps({"temp":temp,"humi":humi}), qos=0)
-        sleep(10)
+    client.loop_forever()
+
+    # while True:
+    #     temp = random.uniform(30.1,66.4)
+    #     humi = random.uniform(50.1,96.4)
+    #     client.publish(from_server_config['publish_topic'], 
+    #     payload=json.dumps({"temp":temp,"humi":humi}), qos=0)
+    #     print("推送了数据")
+    #     sleep(10)
