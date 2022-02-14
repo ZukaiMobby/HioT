@@ -1,11 +1,7 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
-from HioT.Models.device import ModelDevice
-from HioT.ModelsORM.device import get_all_device_did, get_device_from_db_by_id
-from HioT.Plugins.get_logger import logger
-
-
+from HioT.Plugins.get_config import scheduler_config
 
 jobstores = {'default': MemoryJobStore()}
 executors = {'default': ThreadPoolExecutor(20),}
@@ -15,10 +11,13 @@ job_defaults = {
     'max_instances': 3
 }
 
-scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults)
+scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone='Asia/Shanghai')
 scheduler.start()
 
 def v46_check_online():
+    from HioT.Models.device import ModelDevice
+    from HioT.ModelsORM.device import get_all_device_did, get_device_from_db_by_id
+    from HioT.Plugins.get_logger import logger
     device_list = get_all_device_did()
     for did in device_list:
 
@@ -32,7 +31,7 @@ def v46_check_online():
                 if device.last_vist and device.check_online():
                     logger.info(f"设备 {device.did} 状态发生变化")
 
-scheduler.add_job(func=v46_check_online, trigger='interval', seconds=10)
+scheduler.add_job(func=v46_check_online, trigger='interval', seconds=scheduler_config['interval'])
 
 
 

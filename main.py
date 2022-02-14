@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.responses import FileResponse
 
-#from HioT.Plugins.check_env import check_for_initialize
+from HioT.Plugins.check_env import check_for_initialize
 from HioT.Plugins.get_config import *
 from HioT.Plugins.scheduler import scheduler
 import HioT.Plugins.mqtt 
@@ -38,6 +38,6 @@ app.include_router(route_setting.router)
 
 
 if __name__ == '__main__':
-    # check_for_initialize()
+    check_for_initialize()
     uvicorn.run("main:app", log_level='info',
                 host=uvicorn_config['host'], port=uvicorn_config['port'])

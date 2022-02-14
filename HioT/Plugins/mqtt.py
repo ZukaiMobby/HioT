@@ -67,8 +67,6 @@ client.on_connect = on_connect
 client.on_message = on_message
 client.subscribe(subscribe_list)
 #client.on_connect_fail  这个参数可以指定一下
-
-
 client.loop_start()
 
 def receive_data_from_device(did:int,data_item:dict) -> Tuple[bool,int,str,dict]:

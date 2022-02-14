@@ -1,7 +1,7 @@
 from datetime import datetime
 from ipaddress import IPv4Address, IPv6Address
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, PositiveInt
 from HioT.ModelsORM.device import update_device_status_to_db
 
 p_mqtt = 1
@@ -29,13 +29,13 @@ class ModelDevice(BaseModel):
     device_description: Optional[str]  # 设备描述
 
     online: Optional[bool]  # 设备是否在线
-    keep_alive:Optional[int] # 超过这段时间没有通信过判为失活
+    keep_alive:Optional[PositiveInt] # 超过这段时间没有通信过判为失活
 
     ipv4: Optional[IPv4Address] #IPV4 地址支持(实际上是int)
-    v4port: Optional[int] #IPV4 通信端口(还是int)
+    v4port: Optional[PositiveInt] #IPV4 通信端口(还是int)
 
     ipv6: Optional[IPv6Address] #IPV6 地址支持(实际还是int)
-    v6port: Optional[int] #IPV6 通信端口(还是int)
+    v6port: Optional[PositiveInt] #IPV6 通信端口(还是int)
 
     protocol:Optional[int] #设备选择的协议
 
@@ -72,9 +72,9 @@ class ModelRegisterDevice(BaseModel):
 class ModelDeviceChangeStatus(BaseModel):
     device_name: Optional[str]  # 设备名称
     device_description: Optional[str]  # 设备描述
-    keep_alive: Optional[int]
-    v4port:Optional[int]
-    v6port:Optional[int]
+    keep_alive: Optional[PositiveInt]
+    v4port:Optional[PositiveInt]
+    v6port:Optional[PositiveInt]
     protocol:Optional[int]
 
 

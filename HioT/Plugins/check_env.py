@@ -1,32 +1,59 @@
-from getpass import getpass
-import os
 from time import sleep
 from HioT.Plugins.get_config import *
 from HioT.Plugins.get_logger import logger
 
 from HioT.Models.user import ModelUser
 from HioT.ModelsORM.user import add_user_to_db, get_all_user_uid_from_db
-import subprocess
 
-def check_files_db():
 
-    db_file_path = './'+global_config['database_file_path'] + \
-        '/'+global_config['database_file_name']
+def check_orm_database() -> bool:
+    import os
+    db_file_path = './'+global_config['database_file_path'] +'/'+global_config['database_file_name']
 
-    if not os.path.isfile(db_file_path):
-        logger.warning("ORM数据库文件不存在，尝试重建...")
+    try:
+        with open(db_file_path) as f:
+            logger.info("ORM数据库文件存在")
+            return True
+    except FileNotFoundError:
+        logger.warning("ORM 数据库文件不存在，尝试重建...")
         os.makedirs(global_config['database_file_path'])
         with open(db_file_path, 'w', encoding='utf-8'):
             pass
         logger.info("ORM数据库文件新建完成！")
+        return True
+    except PermissionError:
+        logger.error("进程无法访问，或许另一个程序正在使用")
+        return False
 
-    else:
-        logger.debug("找到数据库文件")
+def is_mosquitto_alive() -> bool:
+    import paho.mqtt.client as mqtt
+    from HioT.Plugins.get_config import mqtt_config
+
+    flag = None
+    def on_connect(client, userdata, flags, rc):
+        nonlocal flag
+        flag = True
+        return
 
 
-def startup():
-    mos = subprocess.Popen(r"Env\mosquitto\mosquitto.exe")
-    influx = subprocess.Popen(r"Env\influxdb\influxd.exe")
+    client = mqtt.Client() #拿到instance
+    client.connect(mqtt_config['host'],mqtt_config['port'],mqtt_config['keepalive'] ) # 600为keepalive的时间间隔
+    client.on_connect = on_connect
+    client.loop()
+    return flag
+
+def is_influx_alive() -> bool:
+    import requests
+    from HioT.Plugins.get_config import influxDB_config
+    url = influxDB_config['url']+'/ping'
+    try:
+        res = requests.get(url)
+        if res.status_code == 204:
+            return True
+        else:
+            return False
+    except requests.exceptions.ConnectionError:
+        return False
 
 
 def is_first_run():
@@ -40,6 +67,10 @@ def is_first_run():
 
 def rebuild_env():
     #用于重置环境
+    import os
+    import subprocess
+    logger.error("重置函数已经不再使用..")
+
     db_file_path = './'+global_config['database_file_path'] + \
         '/'+global_config['database_file_name']
 
@@ -60,12 +91,27 @@ def rebuild_env():
     subprocess.Popen(create_command)
     logger.info("influx bucket 创建指令已下达")
     process.wait()
-
     p.kill()
 
 
 def check_for_initialize():
-    check_files_db()  # 检查文件完整性
+    from getpass import getpass
+
+    ok = True
+
+    if not check_orm_database():
+        logger.error("sqlite 连接失败...")
+        ok = False
+    if not is_influx_alive():
+        logger.error("INFUX DB 连接失败...")
+        ok = False
+    if not is_mosquitto_alive():
+        logger.error("mosquitto 连接失败...")
+        ok = False
+    if not ok:
+        logger.fatal("一个或多个组件连接失败，继续启动可能导致数据丢失")
+
+
     if is_first_run():
         print("欢迎使用HioT,让我们开始吧")
         print("这似乎是您第一次运行，让我们知道您是谁~")
@@ -77,13 +123,9 @@ def check_for_initialize():
         print("您的UID为 1, UID是平台识别账号的唯一凭据")
         print("5秒后继续...")
         sleep(5)
-    try:
-        startup()
-    except:
-        logger.fatal("一个或多个组件无法启动..")
-    
-    
+
 
 if __name__ == '__main__':
     #rebuild_env()
+    #check_for_initialize()
     pass
