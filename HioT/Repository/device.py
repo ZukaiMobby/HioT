@@ -7,7 +7,7 @@ from HioT.Models.user import ModelUser
 from HioT.ModelsORM.device import add_device_to_db, delete_device_from_db, get_all_device_did, get_device_from_db_by_id, update_device_config_to_db, update_device_data_item_to_db, update_device_status_to_db
 from HioT.ModelsORM.device_type import get_device_type_from_db_by_id
 from HioT.ModelsORM.user import get_user_from_db_by_id
-from HioT.Plugins.mqtt import push_config_to_device
+from HioT.Plugins.mqtt import push_config_to_device, remove_dev_from_subscribe
 
 def get_all_device():
     """ 获取所有设备id，包括所有已经注册的设备 """
@@ -22,7 +22,6 @@ def register_a_device(new_device_info: ModelRegisterDevice,request:Request):
     """ 由设备发起，设备注册时调用 """
     ip:str = request.client[0]
     ip = ipaddress.ip_address(ip)
-    port:int = request.client[1]
 
     if type(ip) == ipaddress.IPv4Address:
         is_v4 = True
@@ -58,11 +57,9 @@ def register_a_device(new_device_info: ModelRegisterDevice,request:Request):
             }
         
         dev = ModelDevice(**gen_dev)
-        
         return add_device_to_db(dev.dict())
 
     result = gen_dev_and_add_db(new_device_info)
-    print(result)
     return {
         "errno":result[1],
         "message":result[2],
@@ -156,6 +153,9 @@ def delete_a_device(did:int):
     }
 
     else:
+        
+        if the_device.protocol == 1:
+            remove_dev_from_subscribe(did)
         result = delete_device_from_db(did)
         return {
             "errno":result[1],
@@ -178,7 +178,6 @@ def get_device_history(did:int):
 
 def delete_device_history():
     return "此接口暂不考虑开发"
-    pass
 
 def device_get_config(did:int):
     """ 此接口由设备调用 """

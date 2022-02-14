@@ -1,6 +1,6 @@
 import json
 from types import NoneType
-
+from rich import print
 from typing import List, Tuple
 from sqlalchemy import Column, Integer, String
 
@@ -40,6 +40,7 @@ OrmBase.metadata.create_all(engine)
 
 def add_device_type_to_db(type_info: dict) -> Tuple[bool,int,str,dict]:
     """ 从ModelDeviceType中抽取并插入数据库 """
+    print(type_info)
     if type_info['device_type_id'] == None:
         #新建一个设备类型
 
@@ -60,7 +61,8 @@ def add_device_type_to_db(type_info: dict) -> Tuple[bool,int,str,dict]:
             if type_info['protocol'] == p_ipv4:
 
                 if not type_info['v4port']:
-                    hint = f"新增设备类型出错：ipv4 必须设置 vport4"
+                    print(f"========>{type_info['v4port']}")
+                    hint = f"新增设备类型出错：ipv4 必须设置 v4port"
                     logger.error(hint)
                     return (False,332,hint,{})
                 elif int(type_info['v4port']) <= 0:
@@ -115,8 +117,7 @@ def add_device_type_to_db(type_info: dict) -> Tuple[bool,int,str,dict]:
             "v6port":type_info['v6port'],
             "protocol":type_info['protocol']
         }
-        from rich import print
-        print(device_type_in_dict)
+        
 
         the_device_type = ORMDeviceType(**device_type_in_dict)
         session.add(the_device_type)

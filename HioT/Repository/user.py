@@ -1,5 +1,3 @@
-
-
 from HioT.Models.user import ModeUserInfoDisplay, ModelUpdateUser, ModelUser
 from HioT.ModelsORM.user import delete_user_from_db, get_all_user_uid_from_db,add_user_to_db, get_user_from_db_by_id, update_user_to_db
 
@@ -9,7 +7,6 @@ def get_all_users():
 def create_a_user(new_user_info):
     new_user = ModelUser(**new_user_info.dict())
     result = add_user_to_db(new_user.dict())
-    print(result[3])
     response = {
         "errno":result[1],
         "message":result[2],
@@ -17,7 +14,7 @@ def create_a_user(new_user_info):
     }
     return response
 
-def query_a_user(uid):
+def query_a_user(uid:int):
     user_info = get_user_from_db_by_id(uid)
     if user_info == {}:
         return {
@@ -36,7 +33,7 @@ def query_a_user(uid):
 
     return response
 
-def delete_a_user(uid):
+def delete_a_user(uid:int):
     result = delete_user_from_db(uid)
     return {
         "errno":result[1],
@@ -44,7 +41,7 @@ def delete_a_user(uid):
         "data":result[3]
     }
 
-def modify_a_user(uid,update_user_info:ModelUpdateUser):
+def modify_a_user(uid:int,update_user_info:ModelUpdateUser):
 
     user_info = get_user_from_db_by_id(uid)
     if user_info == {}:
@@ -73,7 +70,7 @@ def modify_a_user(uid,update_user_info:ModelUpdateUser):
     return response
 
 
-def get_user_devices_did(uid):
+def get_user_devices_did(uid:int):
     user_info = get_user_from_db_by_id(uid)
 
     if user_info == {}:
@@ -91,13 +88,13 @@ def get_user_devices_did(uid):
     }
 
 
-def add_a_device_to_user(uid,did):
+def add_a_device_to_user(uid:int,did:int):
 
     user_info = get_user_from_db_by_id(uid)
-    if user_info == {}:
+    if not user_info:
         return {
             "errno":402,
-            "message":f"用户 {uid} 不存在",
+            "message":f"添加设备至用户 {uid} 时：用户查询接口返回空",
             "data":{}
         }
     
@@ -111,7 +108,7 @@ def add_a_device_to_user(uid,did):
     }
     return response
 
-def delete_a_device_from_user(uid,did):
+def delete_a_device_from_user(uid:int,did:int):
     user_info = get_user_from_db_by_id(uid)
     if user_info == {}:
         return {

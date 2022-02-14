@@ -1,6 +1,6 @@
 from HioT.Models.device_type import ModelCreateDeviceType, ModelDeviceType
 from HioT.ModelsORM.device_type import add_device_type_to_db, delete_device_type_from_db, get_all_device_type_from_db, get_device_type_from_db_by_id
-
+from rich import print
 
 def get_all_device_type(device_type_id):
     """ 获得所有设备类型及其信息 """
@@ -23,6 +23,7 @@ def get_all_device_type(device_type_id):
 def create_a_device_type(new_device_type:ModelCreateDeviceType):
     """ 创建一个设备类型 """
     device_type = ModelDeviceType(**new_device_type.dict())
+    print(device_type.dict())
     result = add_device_type_to_db(device_type.dict())
     return {
         "errno":result[1],

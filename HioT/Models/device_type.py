@@ -4,7 +4,7 @@ from pydantic import BaseModel, PositiveInt
 
 
 class ModelDeviceType(BaseModel):
-    device_type_id: int
+    device_type_id: Optional[int]
     device_type_name: str
     protocol:int
 

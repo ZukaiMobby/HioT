@@ -32,9 +32,9 @@ def change_a_device_status(new_device_info:ModelDeviceChangeStatus,did:int):
 def delete_a_device(did:int):
     return device.delete_a_device(did)
 
-@router.get('/{did}/stream')
-def get_uri_for_streaming():
-    return device.get_uri_for_streaming()
+# @router.get('/{did}/stream')
+# def get_uri_for_streaming():
+#     return device.get_uri_for_streaming()
 
 @router.get('/{did}/history',response_model=CommonResponseModel)
 def get_device_history(did:int):

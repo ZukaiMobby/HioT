@@ -29,6 +29,12 @@ class ModelUser(BaseModel):
 
         
         dev_info = get_device_from_db_by_id(did)
+
+        if not dev_info:
+            hint = f"用户{self.uid}绑定设备 {did} 时，设备查询接口返回了空"
+            logger.info(hint)
+            return (False,401,hint,{})
+
         dev = ModelDevice(**dev_info)
         
         if dev.bind_user != None:
@@ -39,7 +45,7 @@ class ModelUser(BaseModel):
                 return (False,401,hint,{})
             else:
 
-                hint = f"用户 {self.uid} 试图添加已被 {dev.bind_user} 添加 设备DID:{did}"
+                hint = f"用户 {self.uid} 试图添加已被 {dev.bind_user} 添加的设备DID:{did}"
                 logger.error(hint)
                 return (False,401,hint,{})
 

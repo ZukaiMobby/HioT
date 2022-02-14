@@ -27,7 +27,7 @@ def delete_a_device_type(device_type_id:int):
     """ 删除一个设备类型 """
     return setting.delete_a_device_type(device_type_id)
 
-@router.delete('/reset')
-def reset_the_system():
-    """ 危险: 重置系统 """
-    return setting.reset_the_system()
+# @router.delete('/reset')
+# def reset_the_system():
+#     """ 危险: 重置系统 """
+#     return setting.reset_the_system()

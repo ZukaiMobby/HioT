@@ -4,7 +4,8 @@ __all__ = [
             'influxDB_config',
             'uvicorn_config',
             'mqtt_config',
-            'scheduler_config'
+            'scheduler_config',
+            'security_config'
         ]
 
 
@@ -30,3 +31,4 @@ influxDB_config = config['influxDB']
 uvicorn_config = config['uvicorn']
 mqtt_config = config['mqtt']
 scheduler_config = config['scheduler']
+security_config = config['security']

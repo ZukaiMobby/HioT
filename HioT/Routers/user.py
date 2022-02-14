@@ -26,19 +26,19 @@ def query_a_user(uid:int):
     return user.query_a_user(uid)
 
 @router.put('/{uid}')
-def modify_a_user(uid,update_user_info:ModelUpdateUser):
+def modify_a_user(uid:int,update_user_info:ModelUpdateUser):
     return user.modify_a_user(uid,update_user_info)
 
 @router.delete('/{uid}/',response_model=CommonResponseModel)
-def delete_a_user(uid):
+def delete_a_user(uid:int):
     return user.delete_a_user(uid)
 
 @router.get('/{uid}/device',response_model=CommonResponseModel)
-def get_user_devices_did(uid):
+def get_user_devices_did(uid:int):
     return user.get_user_devices_did(uid)
 
 @router.post('/{uid}/device',response_model=CommonResponseModel)
-def add_a_device_to_user(uid,did:int):
+def add_a_device_to_user(uid:int,did:int):
     return user.add_a_device_to_user(uid,did)
 
 @router.delete('/{uid}/device',response_model=CommonResponseModel)

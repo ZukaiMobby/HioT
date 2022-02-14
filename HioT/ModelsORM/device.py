@@ -265,8 +265,6 @@ def update_device_data_item_to_db(device_model:dict) -> Tuple[bool,int,str,dict]
 
 
 def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
-    from rich import print
-    
 
     try:
         did = int(device_model['did'])
@@ -284,7 +282,10 @@ def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
         logger.error(hint)
         return (False,100,hint,{})
 
-    time = datetime.timestamp(device_model['last_vist'])
+    if device_model['last_vist']: 
+        time = datetime.timestamp(device_model['last_vist'])
+    else:
+        time = None
 
     device.bind_user = device_model['bind_user']
     device.device_description = device_model['device_description']
@@ -343,7 +344,6 @@ def update_device_config_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
 
 
 def delete_device_from_db(did: int) -> Tuple[bool,int,str,dict]:
-    from HioT.Plugins.mqtt import remove_dev_from_subscribe
     try:
         did = int(did)
 
@@ -357,8 +357,6 @@ def delete_device_from_db(did: int) -> Tuple[bool,int,str,dict]:
         hint = f"删除设备时出错：设备{did}不存在"
         logger.error(hint)
         return (False,401,hint,{})
-    if the_device.protocol == 1:
-        remove_dev_from_subscribe(did)
 
     session.delete(the_device)
     session.commit()

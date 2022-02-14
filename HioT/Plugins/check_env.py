@@ -93,10 +93,28 @@ def rebuild_env():
     process.wait()
     p.kill()
 
+def init_for_first_run():
+    from getpass import getpass
+    from passlib.context import CryptContext
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+    print("欢迎使用HioT,让我们开始吧")
+    print("这似乎是您第一次运行，让我们知道您是谁~")
+    name = input("请输入用户名：")
+    password = getpass("为确保账号安全，请输入密码：")
+    pwd_hashed = pwd_context.hash(password)
+    print(pwd_hashed)
+    new_user = ModelUser(name=name,password=pwd_hashed,privilege=2)
+    if not add_user_to_db(new_user.dict()):
+        logger.fatal("初始化第一个用户时发生错误，请检查..")
+    print("您的UID为 1, UID是平台识别账号的唯一凭据")
+    print("5秒后继续...")
+    sleep(5)
+    pass
 
 def check_for_initialize():
-    from getpass import getpass
-
+    
     ok = True
 
     if not check_orm_database():
@@ -111,21 +129,11 @@ def check_for_initialize():
     if not ok:
         logger.fatal("一个或多个组件连接失败，继续启动可能导致数据丢失")
 
-
     if is_first_run():
-        print("欢迎使用HioT,让我们开始吧")
-        print("这似乎是您第一次运行，让我们知道您是谁~")
-        name = input("请输入用户名：")
-        password = getpass("为确保账号安全，请输入密码：")
-        new_user = ModelUser(name=name,password=password,privilege=2)
-        if not add_user_to_db(new_user.dict()):
-            logger.fatal("初始化第一个用户时发生错误，请检查..")
-        print("您的UID为 1, UID是平台识别账号的唯一凭据")
-        print("5秒后继续...")
-        sleep(5)
+        init_for_first_run()
+
 
 
 if __name__ == '__main__':
-    #rebuild_env()
-    #check_for_initialize()
+    init_for_first_run()
     pass

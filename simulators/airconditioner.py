@@ -80,12 +80,12 @@ if __name__ == '__main__':
     
     temp = random.uniform(30.1,66.4)
     humi = random.uniform(50.1,96.4)
-    client.loop_forever()
+    client.loop_start()
 
-    # while True:
-    #     temp = random.uniform(30.1,66.4)
-    #     humi = random.uniform(50.1,96.4)
-    #     client.publish(from_server_config['publish_topic'], 
-    #     payload=json.dumps({"temp":temp,"humi":humi}), qos=0)
-    #     print("推送了数据")
-    #     sleep(10)
+    while True:
+        temp = random.uniform(30.1,66.4)
+        humi = random.uniform(50.1,96.4)
+        client.publish(from_server_config['publish_topic'], 
+        payload=json.dumps({"temp":temp,"humi":humi}), qos=0)
+        print("推送了数据")
+        sleep(10)

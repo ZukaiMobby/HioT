@@ -51,14 +51,17 @@ def add_user_to_db(user_model: dict) -> Tuple[bool,int,str,dict]:
 def get_user_from_db_by_id(uid: int) -> dict:
     """ 从数据库中取得用户信息，错误返回空 """
     the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == int(uid)).first()
-    if not the_user:
+    if type(the_user) == NoneType:
         return {}
 
     if type(the_user.devices) == str:
         the_user.devices = the_user.devices.split()
         the_user.devices = list(map(int,the_user.devices))
+    elif type(the_user.devices) == NoneType:
+        the_user.devices = None
     else:
-        logger.info("取得用户{uid}信息时，其设备列表不为字典")
+        logger.info(f"取得用户{uid}信息时，其设备列表不为字符串或空为{type(the_user.devices)}")
+        return {}
 
     the_user_in_dict = {
         "uid":the_user.uid,
