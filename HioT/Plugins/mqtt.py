@@ -1,16 +1,3 @@
-def pub_str_gen(did) -> str:
-    return f"did{did}publish"
-
-
-def sub_str_gen(did) -> str:
-    return f"did{did}subscribe"
-
-"""
-
-这个是平台端，不要脑袋瓜子写糊涂了！！！！
-
-"""
-
 import json
 from typing import List, Tuple
 import paho.mqtt.client as mqtt
@@ -62,7 +49,7 @@ def on_message(client, userdata, msg):
 
 
 client = mqtt.Client() #拿到instance
-client.connect(mqtt_config['host'],mqtt_config['port'],mqtt_config['keepalive'] ) # 600为keepalive的时间间隔
+client.connect(mqtt_config['host'],mqtt_config['port'],mqtt_config['keepalive'] )
 client.on_connect = on_connect
 client.on_message = on_message
 client.subscribe(subscribe_list)

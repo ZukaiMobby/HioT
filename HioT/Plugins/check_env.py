@@ -104,7 +104,7 @@ def init_for_first_run():
     password = getpass("为确保账号安全，请输入密码：")
     pwd_hashed = pwd_context.hash(password)
     print(pwd_hashed)
-    new_user = ModelUser(name=name,password=pwd_hashed,privilege=2)
+    new_user = ModelUser(name=name,password=pwd_hashed,privilege=0)
     if not add_user_to_db(new_user.dict()):
         logger.fatal("初始化第一个用户时发生错误，请检查..")
     print("UID是平台识别账号的唯一凭据, 请牢记")

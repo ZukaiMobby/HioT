@@ -53,11 +53,15 @@ def get_user_from_db_by_id(uid: int) -> dict:
         return {}
 
     if type(the_user.devices) == str:
+        logger.error(f"取得用户{uid}信息时，为{type(the_user.devices)}是str，姑且放过..")
         the_user.devices = the_user.devices.split()
         the_user.devices = list(map(int,the_user.devices))
         
     elif type(the_user.devices) == NoneType:
         the_user.devices = None
+    elif type(the_user.devices) == list:
+        logger.error(f"取得用户{uid}信息时，为{type(the_user.devices)}是list，姑且放过..")
+        pass
     else:
         logger.error(f"取得用户{uid}信息时，其设备列表不为字符串或空为{type(the_user.devices)}")
         return {}
@@ -98,28 +102,28 @@ def update_user_to_db(user_model: dict):
         user.privilege = user_model['privilege']
         #记得将数组转换为字符串
         if type(user_model['devices']) == list:
-
             user_model['devices'] = " ".join(map(str,user_model['devices']))
             user.devices = user_model['devices']
-            session.commit() #提交修改
-
-            hint = f"更新用户 {user.uid} 成功"
-            logger.info(hint)
-            return (True,0,hint,{})
+        elif type(user_model['devices']) == NoneType:
+            user.devices = None
         else:
-            hint = f"请求更新的用户 {user.uid} 设备列表为{type(user.devices)},应为list"
+            hint = f"请求更新的用户 {user.uid} 设备列表为{type(user.devices)},应为list或None"
             logger.error(hint)
             return (False,402,hint,{})
-        
+
+        session.commit() #提交修改
+        hint = f"更新用户 {user.uid} 成功"
+        logger.info(hint)
+        return (True,0,hint,{})
 
 def delete_user_from_db(uid: int) -> Tuple[bool,int,str,dict]:
-    the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == uid).first()
-    if not the_user:
+    user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == uid).first()
+    if not user:
         hint = f"请求删除的用户：{uid} 不存在"
         logger.error(hint)
         return (False,402,hint,{})
     else:
-        session.delete(the_user)
+        session.delete(user)
         session.commit()
         logger.info(f"请求删除的用户：{uid} 成功")
         return (True,0,f"请求删除的用户：{uid} 成功",{})

@@ -58,7 +58,6 @@ def gen_operation_privilige(user: ModelUser = None, target_uid:int = None, targe
         return ANONYMOUS #不知名的用户
     
 
-
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
@@ -71,7 +70,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 
 def authenticate_user(uid:int,pwd_to_verify:str) -> ModelUser:
-
+    """ 验证成功之后直接返回的用户对象 """
     uid = int(uid)
     the_user_info = get_user_from_db_by_id(uid)
 

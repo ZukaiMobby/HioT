@@ -40,7 +40,7 @@ OrmBase.metadata.create_all(engine)
 
 def add_device_type_to_db(type_info: dict) -> Tuple[bool,int,str,dict]:
     """ 从ModelDeviceType中抽取并插入数据库 """
-    print(type_info)
+
     if type_info['device_type_id'] == None:
         #新建一个设备类型
 
