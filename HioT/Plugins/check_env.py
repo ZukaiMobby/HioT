@@ -6,6 +6,7 @@ from HioT.Models.user import ModelUser
 from HioT.ModelsORM.user import add_user_to_db, get_all_user_uid_from_db
 
 
+
 def check_orm_database() -> bool:
     import os
     db_file_path = './'+global_config['database_file_path'] +'/'+global_config['database_file_name']
@@ -95,9 +96,7 @@ def rebuild_env():
 
 def init_for_first_run():
     from getpass import getpass
-    from passlib.context import CryptContext
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+    from HioT.Security.utils import pwd_context
 
     print("欢迎使用HioT,让我们开始吧")
     print("这似乎是您第一次运行，让我们知道您是谁~")
@@ -108,7 +107,7 @@ def init_for_first_run():
     new_user = ModelUser(name=name,password=pwd_hashed,privilege=2)
     if not add_user_to_db(new_user.dict()):
         logger.fatal("初始化第一个用户时发生错误，请检查..")
-    print("您的UID为 1, UID是平台识别账号的唯一凭据")
+    print("UID是平台识别账号的唯一凭据, 请牢记")
     print("5秒后继续...")
     sleep(5)
     pass

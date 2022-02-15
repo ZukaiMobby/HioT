@@ -1,7 +1,12 @@
+import imp
+from lib2to3.pgen2 import token
 from typing import List
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from HioT.Models.response import CommonResponseModel
 from HioT.Models.user import ModelNewUser, ModelUpdateUser, ModelUser
+from fastapi.security import OAuth2PasswordRequestForm
+from HioT.Security.models import Token
+from HioT.Security.utils import get_current_user_by_token, oauth2_scheme
 from HioT.Repository import user
 
 router = APIRouter(
@@ -21,8 +26,16 @@ def create_a_user(new_user_info:ModelNewUser):
     #DEV：1.0
     return user.create_a_user(new_user_info)
 
+@router.post('/login', response_model=Token)
+def login_get_token(form: OAuth2PasswordRequestForm = Depends()):
+    return user.login_get_token(form)
+
+
 @router.get('/{uid}',response_model=CommonResponseModel)
-def query_a_user(uid:int):
+def query_a_user(uid:int,request_user = Depends(get_current_user_by_token)):
+    if not request_user:
+        print("用户未登入")
+        return
     return user.query_a_user(uid)
 
 @router.put('/{uid}')

@@ -1,8 +1,6 @@
 from types import NoneType
 from typing import List, Tuple
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.sql import text
-
 from HioT.Database.sqliteDB import OrmBase,session,engine
 from HioT.Plugins.get_logger import logger
 
