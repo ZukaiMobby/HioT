@@ -55,10 +55,11 @@ def get_user_from_db_by_id(uid: int) -> dict:
     if type(the_user.devices) == str:
         the_user.devices = the_user.devices.split()
         the_user.devices = list(map(int,the_user.devices))
+        
     elif type(the_user.devices) == NoneType:
         the_user.devices = None
     else:
-        logger.info(f"取得用户{uid}信息时，其设备列表不为字符串或空为{type(the_user.devices)}")
+        logger.error(f"取得用户{uid}信息时，其设备列表不为字符串或空为{type(the_user.devices)}")
         return {}
 
     the_user_in_dict = {

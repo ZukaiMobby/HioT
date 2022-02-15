@@ -150,7 +150,7 @@ def login_get_token(form_data: OAuth2PasswordRequestForm):
                 access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
                 access_token = create_access_token(data={"sub": uid}, expires_delta=access_token_expires)
                 return {"access_token": access_token, "token_type": "bearer"}
-        except:
+        except ValueError:
             raise HTTPException(
                 status_code = 422,
                 detail = "Incorrect uid: Username should enter uid",

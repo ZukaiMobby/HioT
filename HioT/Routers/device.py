@@ -55,8 +55,7 @@ def put_device_config(did:int,new_config:dict):
     此接口由设备所属用户调用
     说明：此处配置是设备与平台关系之间的配置
     """
-    print(type(new_config))
-    print(new_config)
+
     return device.put_device_config(did,new_config)
 
 @router.put('/{did}/update',response_model=CommonResponseModel)
