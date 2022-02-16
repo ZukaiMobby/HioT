@@ -1,4 +1,4 @@
-import json
+﻿import json
 import random
 from time import sleep
 import paho.mqtt.client as mqtt
@@ -23,7 +23,7 @@ device_config = {
     "on": False
 }
 
-reg_info = {"device_type_id": 1}
+reg_info = {"device_type_id": 5}
 
 import requests
 url = "http://127.0.0.1:8001/device/"

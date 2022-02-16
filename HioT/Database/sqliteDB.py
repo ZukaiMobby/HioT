@@ -8,11 +8,11 @@ with logger:
     logger.debug("数据库程序执行路径："+os.path.abspath("__file__"))
     database_path = "sqlite:///./" + \
         global_config['database_file_path']+'/' + \
-        global_config['database_file_name']+'?check_same_thread=False'
+        global_config['database_file_name']
 
     logger.debug(f"数据库完整路径: {database_path}")
 
-    engine = create_engine(database_path)
+    engine = create_engine(database_path,connect_args={"check_same_thread": False})
     mapper_registry = registry()
     OrmBase = mapper_registry.generate_base()
     Sessioned = sessionmaker(bind=engine, autocommit=False, autoflush=False,)

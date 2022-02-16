@@ -48,6 +48,12 @@ def add_user_to_db(user_model: dict) -> Tuple[bool,int,str,dict]:
 
 def get_user_from_db_by_id(uid: int) -> dict:
     """ 从数据库中取得用户信息，错误返回空 """
+
+    if type(uid) != int:
+        logger.error(f"查询的用户UID不是int， 是{type(uid)}")
+        
+
+
     the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == int(uid)).first()
     if type(the_user) == NoneType:
         return {}

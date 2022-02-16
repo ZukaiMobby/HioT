@@ -155,6 +155,7 @@ def delete_a_device(did:int):
     else:
         
         if the_device.protocol == 1:
+            pass
             remove_dev_from_subscribe(did)
         result = delete_device_from_db(did)
         return {

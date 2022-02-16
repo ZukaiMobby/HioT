@@ -1,5 +1,4 @@
 import json
-from types import NoneType
 from rich import print
 from typing import List, Tuple
 from sqlalchemy import Column, Integer, String

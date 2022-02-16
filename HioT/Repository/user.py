@@ -26,13 +26,9 @@ def query_a_user(uid:int) -> CommonResponseModel:
     return CommonResponseModel(errno=0,message="查询成功",data=user.dict())
 
 
-def delete_a_user(uid:int):
+def delete_a_user(uid:int) -> CommonResponseModel:
     result = delete_user_from_db(uid)
-    return {
-        "errno":result[1],
-        "message":result[2],
-        "data":result[3]
-    }
+    return CommonResponseModel(errno=result[1],message=result[2],data=result[3])
 
 def modify_a_user(uid:int,update_user_info:ModelUpdateUser):
     #只能主动修改用户name和password
@@ -84,9 +80,9 @@ def login_get_token(form_data: OAuth2PasswordRequestForm):
         try:
             uid:str = form_data.username #subject must be a string
             pwd:str = form_data.password
-            user: ModelUser = authenticate_user(int(uid),pwd)
+            user: dict = authenticate_user(int(uid),pwd)
 
-            if type(user) == NoneType:
+            if not user:
                 raise HTTPException(
                     status_code=401,
                     detail = "Incorrect uid or password",

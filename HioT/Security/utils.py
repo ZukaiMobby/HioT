@@ -36,9 +36,20 @@ privilige_exception = HTTPException(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
+type_exception = HTTPException(
+        status_code=422,
+        detail="Error field data type received",
+    )
 
 def gen_operation_privilige(user: ModelUser = None, target_uid:int = None, target_did:int = None) -> int:
     #用于生成本次操作的权限等级
+
+    print(f"=====> 权限认定的检查 ======>")
+    print(user.dict())
+    print(target_uid)
+    print(target_did)
+    print(f"=====> 权限认定的检查 ======>")
+
     if type(user) == NoneType:
         return ANONYMOUS
 
@@ -69,20 +80,20 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-def authenticate_user(uid:int,pwd_to_verify:str) -> ModelUser:
-    """ 验证成功之后直接返回的用户对象 """
-    uid = int(uid)
-    the_user_info = get_user_from_db_by_id(uid)
-
-    if not the_user_info:
-        return None
+def authenticate_user(uid:int,pwd_to_verify:str) -> dict:
+    """ 验证成功之后返回的用户字典 """
+    try:
+        assert type(uid) == int
+        assert type(pwd_to_verify) == str
+    except AssertionError:
+        raise type_exception
     
-    user = ModelUser(**the_user_info)
+    usr_info = get_user_from_db_by_id(uid)
 
-    if not pwd_context.verify(pwd_to_verify, user.password):
-        return None
-    
-    return user
+    if not usr_info and not pwd_context.verify(pwd_to_verify, usr_info['password']):
+        return {}
+        
+    return usr_info
 
 
 def get_current_user_by_token(token: str = Depends(oauth2_scheme)): 

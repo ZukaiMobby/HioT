@@ -156,9 +156,12 @@ def add_device_to_db(device_model: dict ) -> Tuple[bool,int,str,dict]:
 def get_device_from_db_by_id(did: int) -> dict:
     """ 根据所给的DID以字典的方式返回设备信息用于创建设备实例"""
 
-    if not type(did) == int:
+    if type(did) != int:
         logger.error(f"获取设备 {did} 时，did非整形数值")
         return {}
+
+    logger.debug(f"get_device_from_db_by_id的DEBUG{did}")
+
 
     device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
     if not device:
@@ -265,7 +268,8 @@ def update_device_data_item_to_db(device_model:dict) -> Tuple[bool,int,str,dict]
 
 
 def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
-
+    from rich import print
+    print(f"===========>BUG CHECK==={type(device_model['did'])}===")
     try:
         did = int(device_model['did'])
 
@@ -276,7 +280,8 @@ def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
         return (False,403,hint,{})
 
     device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
-    
+    print(f"===========>BUG CHECK==={device.did}===")
+    print(device)
     if not device:
         hint = f"更新设备status时出错: {did} 不存在"
         logger.error(hint)
@@ -311,7 +316,14 @@ def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
             hint = f"更新设备status时出错: 试图使用IPV6协议，但设备IPV6地址不合法"
             logger.error(hint)
             return (False,100,hint,{})
+    else:
+        pass
     
+    print("ORM层BUG检查=========>")
+    print(type(device))
+    print(device.bind_user)
+    print(session.dirty)
+    print("ORM层BUG检查=========>")
     session.commit()
 
     hint = f"更新设备status: {did} status已更新"
