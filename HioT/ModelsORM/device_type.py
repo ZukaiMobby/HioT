@@ -60,7 +60,6 @@ def add_device_type_to_db(type_info: dict) -> Tuple[bool,int,str,dict]:
             if type_info['protocol'] == p_ipv4:
 
                 if not type_info['v4port']:
-                    print(f"========>{type_info['v4port']}")
                     hint = f"新增设备类型出错：ipv4 必须设置 v4port"
                     logger.error(hint)
                     return (False,332,hint,{})

@@ -16,7 +16,6 @@ def v46_check_online() -> None:
             else:
                 device_list = [ item[0] for item in res ]
                 for did in device_list:
-                    print(f"checker:{did}")
                     device_info:dict = get_device_from_db_by_id(did)
                     device =  ModelDevice(**device_info)
                     if device.last_vist and device.check_online():

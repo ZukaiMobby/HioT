@@ -23,7 +23,6 @@ def get_all_device_type(device_type_id):
 def create_a_device_type(new_device_type:ModelCreateDeviceType):
     """ 创建一个设备类型 """
     device_type = ModelDeviceType(**new_device_type.dict())
-    print(device_type.dict())
     result = add_device_type_to_db(device_type.dict())
     return {
         "errno":result[1],

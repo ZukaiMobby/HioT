@@ -44,11 +44,6 @@ type_exception = HTTPException(
 def gen_operation_privilige(user: ModelUser = None, target_uid:int = None, target_did:int = None) -> int:
     #用于生成本次操作的权限等级
 
-    print(f"=====> 权限认定的检查 ======>")
-    print(user.dict())
-    print(target_uid)
-    print(target_did)
-    print(f"=====> 权限认定的检查 ======>")
 
     if type(user) == NoneType:
         return ANONYMOUS

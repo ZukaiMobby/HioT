@@ -269,7 +269,6 @@ def update_device_data_item_to_db(device_model:dict) -> Tuple[bool,int,str,dict]
 
 def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
     from rich import print
-    print(f"===========>BUG CHECK==={type(device_model['did'])}===")
     try:
         did = int(device_model['did'])
 
@@ -280,8 +279,6 @@ def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
         return (False,403,hint,{})
 
     device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
-    print(f"===========>BUG CHECK==={device.did}===")
-    print(device)
     if not device:
         hint = f"更新设备status时出错: {did} 不存在"
         logger.error(hint)
@@ -319,11 +316,7 @@ def update_device_status_to_db(device_model: dict) -> Tuple[bool,int,str,dict]:
     else:
         pass
     
-    print("ORM层BUG检查=========>")
-    print(type(device))
-    print(device.bind_user)
-    print(session.dirty)
-    print("ORM层BUG检查=========>")
+
     session.commit()
 
     hint = f"更新设备status: {did} status已更新"

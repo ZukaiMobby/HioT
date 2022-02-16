@@ -48,38 +48,36 @@ def add_user_to_db(user_model: dict) -> Tuple[bool,int,str,dict]:
 
 def get_user_from_db_by_id(uid: int) -> dict:
     """ 从数据库中取得用户信息，错误返回空 """
-
+    """ 从这里拿出来的数据就不要动，动了就提交！！不然BUG要无限多了 """
     if type(uid) != int:
         logger.error(f"查询的用户UID不是int， 是{type(uid)}")
+        return {}
         
 
-
-    the_user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == int(uid)).first()
-    if type(the_user) == NoneType:
+    user: ORMUser = session.query(ORMUser).filter(ORMUser.uid == int(uid)).first()
+    if type(user) == NoneType:
         return {}
 
-    if type(the_user.devices) == str:
-        logger.error(f"取得用户{uid}信息时，为{type(the_user.devices)}是str，姑且放过..")
-        the_user.devices = the_user.devices.split()
-        the_user.devices = list(map(int,the_user.devices))
+    if type(user.devices) == str:
+
+        devices_in_str = user.devices.split()
+        devices_in_str = list(map(int,devices_in_str))
         
-    elif type(the_user.devices) == NoneType:
-        the_user.devices = None
-    elif type(the_user.devices) == list:
-        logger.error(f"取得用户{uid}信息时，为{type(the_user.devices)}是list，姑且放过..")
-        pass
+    elif type(user.devices) == NoneType:
+        devices_in_str = None
+
     else:
-        logger.error(f"取得用户{uid}信息时，其设备列表不为字符串或空为{type(the_user.devices)}")
+        logger.error(f"取得用户{uid}信息时，其设备列表不为字符串或空为{type(user.devices)}")
         return {}
 
-    the_user_in_dict = {
-        "uid":the_user.uid,
-        "name":the_user.name,
-        "password":the_user.password,
-        "privilege":the_user.privilege,
-        "devices":the_user.devices
+    user_in_dict = {
+        "uid":uid,
+        "name":user.name,
+        "password":user.password,
+        "privilege":user.privilege,
+        "devices":devices_in_str
     }
-    return the_user_in_dict
+    return user_in_dict
 
 def get_all_user_uid_from_db() -> List[int]:
     

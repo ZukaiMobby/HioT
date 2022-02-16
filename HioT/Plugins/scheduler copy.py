@@ -20,9 +20,7 @@ def v46_check_online():
     from HioT.Plugins.get_logger import logger
 
     device_list = get_all_device_did()
-    print(f"===========>sss:{device_list}")
     for did in device_list:
-        print(f"===========>dddddddd:{did}")
         dev:dict = get_device_from_db_by_id(did)
         if not dev:
             continue

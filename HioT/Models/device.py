@@ -58,8 +58,6 @@ class ModelDevice(BaseModel):
     def set_device_online(self):
         from rich import print
         self.online = True
-        print("=========>DEVICE 抽象层DEBUG： ")
-        print(self.dict())
         return update_device_status_to_db(self.dict())
 
     def set_device_offline(self):
