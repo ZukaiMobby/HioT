@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.responses import FileResponse
 
+from HioT.Plugins.get_logger import logger
 from HioT.Plugins.check_env import check_for_initialize
 from HioT.Plugins.get_config import *
 from HioT.Plugins.scheduler import online_checker

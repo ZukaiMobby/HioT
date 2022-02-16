@@ -134,5 +134,5 @@ def check_for_initialize():
 
 
 if __name__ == '__main__':
-    init_for_first_run()
+    rebuild_env()
     pass

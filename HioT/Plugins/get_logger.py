@@ -9,6 +9,7 @@ logger = get_logger(name="main",
                     file_colorful=False)
 
 logger.__enter__()
+logger.info("日志启动")
 
 def log_handler(target):
     """ 添加日志运行时 """

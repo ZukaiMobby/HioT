@@ -160,7 +160,6 @@ def get_device_from_db_by_id(did: int) -> dict:
         logger.error(f"获取设备 {did} 时，did非整形数值")
         return {}
 
-    logger.debug(f"get_device_from_db_by_id的DEBUG{did}")
 
 
     device: ORMDevice = session.query(ORMDevice).filter(ORMDevice.did == did).first()
