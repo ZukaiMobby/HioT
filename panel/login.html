@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<!-- Head -->
+
+<head>
+
+    <title>HioT Login</title>
+    <script src="js/jquery-3.6.0.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/gh/jquery-form/form@4.3.0/dist/jquery.form.min.js" integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn" crossorigin="anonymous"></script>
+    <!-- Meta-Tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- style CSS -->
+    <link rel="stylesheet" href="css/style.css" type="text/css" media="all">
+    <!-- google fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<!-- //Head -->
+
+<!-- Body -->
+
+<body>
+
+    <section class="main">
+        <div class="logo text-center">
+            <h1> <a href="index.html"> HioT Platform Management</a></h1>
+        </div>
+        <div class="content-w3ls text-center">
+            <img src="images/admin.png" alt="" class="img-responsive">
+            <form action="" method="post" id="loginForm">
+                <div class="wthree-field">
+                    <input name="username" id="text1" type="text" value="" placeholder="Uid" required>
+                </div>
+                <div class="wthree-field">
+                    <input name="password" id="myInput" type="Password" placeholder="Password" required>
+                </div>
+                <div class="wthree-field">
+                    
+                </div>
+            </form>
+            <button type="submit" class="btn" id="loginBtn">Sign In</button>
+        </div>
+        <div class="copyright">
+            <p>© 2022 HioT Platform | Designed by <a
+                href="https://w3layouts.com" target="_blank">W3layouts</a></p>
+        </div>
+    </section>
+
+</body>
+<!-- //Body -->
+<script>
+    $("#loginBtn").on("click",function(){
+        $('#loginForm').ajaxSubmit({
+            url: '/user/login',
+            type: 'post',
+			beforeSubmit: function () {},
+            success: function (data,status) {},
+            error: function (data) {},
+
+        });
+
+    })
+
+</script>
+</html>

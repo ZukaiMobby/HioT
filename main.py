@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 
 from HioT.Plugins.get_logger import logger
@@ -23,28 +24,24 @@ async def startup():
 def shutdown():
     client.loop_stop()
 
-info = '''
-Welcome to HioT platform
 
-Here are some notes
-1. Do not run behind a proxy
-'''
 
 @app.get('/', tags=['root'])
 async def app_welcome() -> str:
     """ Uvicorn 欢迎页面 """
-    return info
+    return FileResponse('./panel/index.html')
 
 
 @app.get('/favicon.ico', tags=['root'])
 async def favicon() -> FileResponse:
     """ 返回网站图标（就是玩.jpg） """
-    return FileResponse('./HioT/imgs/favicorn.ico')
+    return FileResponse('./HioT/images/favicorn.ico')
 
 app.include_router(route_device.router)
 app.include_router(route_user.router)
 app.include_router(route_sdk.router)
 app.include_router(route_setting.router)
+app.mount("/panel", StaticFiles(directory="panel"), name="panel")
 
 
 if __name__ == '__main__':

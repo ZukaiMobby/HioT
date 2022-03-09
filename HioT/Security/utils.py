@@ -84,8 +84,8 @@ def authenticate_user(uid:int,pwd_to_verify:str) -> dict:
         raise type_exception
     
     usr_info = get_user_from_db_by_id(uid)
-
-    if not usr_info and not pwd_context.verify(pwd_to_verify, usr_info['password']):
+    
+    if type(usr_info)==NoneType or not pwd_context.verify(pwd_to_verify, usr_info['password']):
         return {}
         
     return usr_info
