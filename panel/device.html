@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>User</title>
+  <script src="js/jquery-3.6.0.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/gh/jquery-form/form@4.3.0/dist/jquery.form.min.js" integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn" crossorigin="anonymous"></script>
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="dist/css/adminlte.min.css">
+</head>
+<body class="hold-transition sidebar-mini">
+  <!-- Content Wrapper. Contains page content -->
+  <div class="">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Device</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item active">Device</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- left column -->
+          <div class="col-md-6">
+            <!-- general form elements -->
+            <div class="card card-primary" id="add-device-div">
+              <div class="card-header">
+                <h3 class="card-title">Bind a device</h3>
+              </div>
+              <!-- /.card-header -->
+              <!-- form start -->
+              <form id="bind-device-form">
+                <div class="card-body">
+                  <div class="form-group">
+                    <label for="usr">New Device</label>
+                    <input type="text" name="did" class="form-control" id="new-udevice" placeholder="Device id (did)" required>
+                  </div>
+  
+
+                </div>
+                <!-- /.card-body -->
+
+                
+              </form>
+              <div class="card-footer">
+                <button type="submit" class="btn btn-primary" id="bind-device-btn">Bind</button>
+              </div>
+            </div>
+            <!-- /.card -->
+
+
+            <!-- card ------------------------------------------------------>
+            <!-- <div class="card card-success" id="device-card-id">
+              <div class="card-header">
+                <h3 class="card-title" id="device-card-title-id">Device ID 3 Online</h3>
+              </div>
+              <form>
+                <div class="card-body">
+                  <label>Device Name</label>
+                  <p id="device-pname-id">设备名称</p>
+                  <label>Device Description </label>
+                  <p id="device-pdescription-id">设备描述</p>
+                  <label id="device-label-data">Device Data</label>
+                  <script>
+                    function createItem(obj){
+                      if(!obj){
+                        $('#device-label-data').after('<p id="device-data-id">该设备不存在可供展示的数据项</p>')
+                      }else{
+                        for(var key in obj){
+                          var p = "<p>"+key+":"+obj[key]+"</p>"
+                          $('#device-label-data').after(p)
+                        }
+                      }
+                    }
+                    let item = {"aop":23.3,"rep":20}
+                    createItem(item);
+                  </script>    
+                </div>
+              </form>
+              <div class="card-footer">
+                <button type="submit" class="btn btn-default" id="r">Refresh</button>
+                <button type="submit" class="btn btn-primary" id="r">Setting</button>
+                <button type="submit" class="btn btn-danger" id="r">Delete</button>
+              </div>
+            </div> -->
+            <!-- card ------------------------------------------------------>
+
+            
+          </div>
+          <!--/.col (left) -->
+          <!-- right column -->
+          <div class="col-md-6">
+            <!-- Form Element sizes -->
+            <div class="card card-danger">
+              <div class="card-header">
+                <h3 class="card-title">Danger Zone</h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <h4>Remove Account</h4>
+                
+                <div>
+                  <label>This will delete account and remove all it's belongings!</label>
+                </div>
+
+
+              </div>
+              <!-- /.card-body -->
+              <div class="card-footer">
+                <button type="submit" class="btn btn-danger" id="delete-account-btn">Confirm!</button>
+              </div>
+            </div>
+            <!-- /.card -->
+            <!-- /.card -->
+
+
+          </div>
+          <!--/.col (right) -->
+        </div>
+        <!-- /.row -->
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+
+  <!-- Control Sidebar -->
+  <aside class="control-sidebar control-sidebar-dark">
+    <!-- Control sidebar content goes here -->
+  </aside>
+  <!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery -->
+<!-- Bootstrap 4 -->
+<script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- bs-custom-file-input -->
+
+<!-- AdminLTE App -->
+<script src="dist/js/adminlte.min.js"></script>
+<!-- AdminLTE for demo purposes -->
+
+<script>
+
+    let token = sessionStorage.getItem('access_token');
+    if(!token){
+        //如果用户没有登录
+        window.location.href = "/panel/login.html";
+    }else{
+      console.log(token);
+    }
+    var didList = [];
+  //同步获取用户设备列表  
+    $.ajax({
+    url: '/user/'+sessionStorage.getItem('uid')+'/device',
+    type:"get",
+    data:null,
+    async:false,
+    beforeSend:function(request){
+      request.setRequestHeader("Authorization"," "+sessionStorage.getItem('token_type')+" "+sessionStorage.getItem('access_token'));
+    },
+    success: function (data,status) {
+      
+      didList = data.data
+      console.log(didList+"pp")
+    },
+    error: function (data,status) {
+        alert(data.responseJSON.detail);
+    },
+  });
+  //用户新增设备绑定的按钮事件
+  $("#bind-device-btn").on("click",function(){
+
+    $.ajax({
+        url: '/user/'+sessionStorage.getItem('uid')+'/device?did='+$('#new-udevice').val(),
+        type: 'post',
+        dataType: "json",
+        data:null,
+
+        beforeSend:function(request){
+            request.setRequestHeader("Authorization"," "+sessionStorage.getItem('token_type')+" "+sessionStorage.getItem('access_token'));
+        },
+
+        success: function (data,status) {
+          if(data.errno != 0){
+            alert(data.message);
+          }
+          else{
+            location.reload();
+          }
+        },
+        error: function (data,status) {
+            alert(data.responseJSON.detail);
+        },
+    })
+
+
+    })
+  //添加设备卡片
+
+  function createDeviceCard(did,online,data_item,device_name,device_description,protocol){
+    
+    var online_str
+    if(online == true){
+      online = "success"
+      online_str = "Online"
+    }else{
+      online = "warning"
+      online_str = "Offline"
+    }
+
+    if(device_name == null){
+      device_name = "Empty"
+    }
+    if(device_description == null){
+      device_description = "Empty"
+    }
+
+    if(protocol == 1){
+      protocol = "MQTT"
+    }
+    else if(protocol == 2){
+      protocol = "TCP/IPv4"
+    }
+    else if(protocol == 3){
+      protocol = "TCP/IPv6"
+    }
+    else{
+      protocol = "黑人问号?"
+    }
+
+    var deviceCard = `
+    <div class="card card-${online}" id="device-card-${did.toString()}">
+        <div class="card-header">
+          <h3 class="card-title" id="device-card-title-${did.toString()}">Device ID ${did.toString()} ${online_str}</h3>
+        </div>
+        <!-- form start -->
+        <form>
+          <div class="card-body">
+            <label>Device Name</label>
+            <p id="device-pname-${did.toString()}">${device_name}</p>
+            <label>Device Description </label>
+            <p id="device-pdescription-${did.toString()}">${device_description}</p>
+            <label id="device-label-data-${did.toString()}">Device Data</label>
+
+          </div>
+          <!-- /.card-body -->
+        </form>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-default" id="dev-card-${did.toString()}-refresh-btn">Refresh</button>
+          <button type="submit" class="btn btn-primary" id="dev-card-${did.toString()}-setting-btn">Setting</button>
+          <button type="submit" class="btn btn-danger" id="dev-card-${did.toString()}-delete-btn">Delete</button>
+        </div>
+      </div>`;
+
+    $("#add-device-div").after(deviceCard);
+  }
+
+  for(var i = didList.length -1;i>=0;i--){
+
+    var did = didList[i];
+    //轮询查询API接口
+    console.log(did)
+    $.ajax({
+    url: '/device/'+did.toString(),
+    type:"get",
+    dataType:"json",
+    data:null,
+    beforeSend:function(request){
+      request.setRequestHeader("Authorization"," "+sessionStorage.getItem('token_type')+" "+sessionStorage.getItem('access_token'));
+    },
+    success: function (data,status) {
+      if(data.errno != 0){
+        alert(data.message);
+      }else{
+        dev_info = data.data,
+        createDeviceCard(dev_info.did,dev_info.online,  dev_info.data_item,  dev_info.device_name, dev_info.device_description, dev_info.protocol)
+      }
+    },
+    error: function (data,status) {
+        alert(data.responseJSON.detail);
+    },
+  });
+}
+      
+
+
+</script>
+
+</body>
+</html>

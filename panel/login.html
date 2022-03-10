@@ -25,23 +25,29 @@
 <body>
 
     <section class="main">
+
         <div class="logo text-center">
             <h1> <a href="index.html"> HioT Platform Management</a></h1>
         </div>
+
+
         <div class="content-w3ls text-center">
             <img src="images/admin.png" alt="" class="img-responsive">
             <form action="" method="post" id="loginForm">
+
                 <div class="wthree-field">
                     <input name="username" id="text1" type="text" value="" placeholder="Uid" required>
                 </div>
+
                 <div class="wthree-field">
                     <input name="password" id="myInput" type="Password" placeholder="Password" required>
                 </div>
-                <div class="wthree-field">
-                    
-                </div>
+                
             </form>
-            <button type="submit" class="btn" id="loginBtn">Sign In</button>
+
+            <div class="wthree-field">
+                <button type="submit" class="btn" id="loginBtn">Sign In</button>
+            </div>
         </div>
         <div class="copyright">
             <p>© 2022 HioT Platform | Designed by <a
@@ -52,13 +58,44 @@
 </body>
 <!-- //Body -->
 <script>
+
+    function getUserInfo(data){
+        $.ajax({
+            type:"get",
+            url: "/user/"+$('#text1').val(),
+            dataType:"json",
+            
+            beforeSend:function(request){
+                request.setRequestHeader("Authorization"," "+data['token_type']+" "+data['access_token']);
+            },
+
+            success:function(data,status){
+                infoObj = data['data'];
+                console.log(data)
+                sessionStorage.setItem('name',infoObj['name'])
+                console.log(infoObj['name'])
+            }
+        })
+
+    }
+
+
     $("#loginBtn").on("click",function(){
         $('#loginForm').ajaxSubmit({
             url: '/user/login',
             type: 'post',
+            dataType: "json",
 			beforeSubmit: function () {},
-            success: function (data,status) {},
-            error: function (data) {},
+            success: function (data,status) {
+                sessionStorage.setItem('access_token', data['access_token']);
+                sessionStorage.setItem('token_type', data['token_type']);
+                sessionStorage.setItem('uid',$('#text1').val());
+                getUserInfo(data);
+                window.location.href = "/";
+            },
+            error: function (data,status) {
+                alert(data.responseJSON.detail);
+            },
 
         });
 
