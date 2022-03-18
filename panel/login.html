@@ -59,14 +59,14 @@
 <!-- //Body -->
 <script>
 
-    function getUserInfo(data){
+    function getUserInfo(datainfo){
         $.ajax({
             type:"get",
             url: "/user/"+$('#text1').val(),
             dataType:"json",
             
             beforeSend:function(request){
-                request.setRequestHeader("Authorization"," "+data['token_type']+" "+data['access_token']);
+                request.setRequestHeader("Authorization"," "+datainfo['token_type']+" "+datainfo['access_token']);
             },
 
             success:function(data,status){

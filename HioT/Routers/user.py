@@ -50,7 +50,7 @@ def login_get_token(form: OAuth2PasswordRequestForm = Depends()):
 
 
 @router.get('/{uid}',response_model=CommonResponseModel)
-def query_a_user(uid:int,request_user = Depends(get_current_user_by_token)):
+async def query_a_user(uid:int,request_user = Depends(get_current_user_by_token)):
     API_PRIVILIGE = LOGIN_SELF
     if gen_operation_privilige(request_user,uid) > API_PRIVILIGE:
         raise privilige_exception

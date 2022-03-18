@@ -46,5 +46,5 @@ app.mount("/panel", StaticFiles(directory="panel"), name="panel")
 
 if __name__ == '__main__':
     check_for_initialize()
-    uvicorn.run("main:app", log_level='info',
+    uvicorn.run("main:app", log_level='error',
                 host=uvicorn_config['host'], port=uvicorn_config['port'])

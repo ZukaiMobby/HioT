@@ -1,23 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script>
-        let token = sessionStorage.getItem('access_token');
-        if(!token){
-            window.location.href = "login.html";
-        }
-        else{
 
-            let name = sessionStorage.getItem('name');
-            console.log("##:"+name);
-        }
-    </script>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data</title>
+  <script src="js/jquery-3.6.0.js"></script>
+  <script src="plugins/chart.js/Chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/jquery-form/form@4.3.0/dist/jquery.form.min.js"
+    integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="dist/css/adminlte.min.css">
 </head>
-<body>
-    <h1>Data</h1>
+
+<body class="hold-transition sidebar-mini">
+  <div class="">
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Data</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item active">Data</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-md-6" id = "card-target">
+            <!-- /.card -->
+
+          </div>
+          <div class="col-md-6">
+            <!-- Form Element sizes -->
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">Tips</h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <h4>Go To Influx DB</h4>
+                
+                <div>
+                  <label>Want more details? Check out influx DB!</label>
+                </div>
+
+
+              </div>
+              <!-- /.card-body -->
+              <div class="card-footer">
+                <form method="get" action = "http://localhost:8086/">
+                  <button type="submit" class="btn btn-primary">Go!</button>
+
+                </form>
+              </div>
+            </div>
+            <!-- /.card -->
+            <!-- /.card -->
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <aside class="control-sidebar control-sidebar-dark"></aside>
+  </div>
+
+  <script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="dist/js/adminlte.min.js"></script>
+
+  <script>
+    function createDataCard(did){
+      var cardModel = `
+      <div class="card card-info">
+        <div class="card-header">
+          <h3 class="card-title">Device ${did.toString()} Data history</h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+              <i class="fas fa-minus"></i>
+            </button>
+            <button type="button" class="btn btn-tool" data-card-widget="remove">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart">
+            <canvas id="lineChart-${did.toString()}"
+              style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      `
+      $(`#card-target`).append(cardModel)
+    }
+
+    function generateDataModel(did){
+      //获取数据模型
+      $.ajax({
+        url: '/device/'+did.toString()+'/history',
+        type: 'get',
+        dataType: "json",
+        data:null,
+
+        beforeSend:function(request){
+            request.setRequestHeader("Authorization"," "+sessionStorage.getItem('token_type')+" "+sessionStorage.getItem('access_token'));
+        },
+
+        success: function (data,status) {
+          if(data.errno != 0){
+            alert(data.message);
+          }
+          else{
+            //查询成功的动作
+            var records = data.data.records
+            if(records.length == 0){
+              $(`#lineChart-${did.toString()}`).before('<p> 没有数据可供展示 </p>')
+              $(`#lineChart-${did.toString()}`).remove()
+              return 
+            }
+            //records = records.slice(-1,-30) //从倒数第几个截取
+            //**********************
+            
+            
+            //手动创建data对象
+            var lineChartData = {}  //总集合 
+            var timeLabels = [];   //底部时间戳
+            var datasets = [] //带标签分项对象 多个
+            var datasets_label = new Set()  //仅仅为循环用,需要赋值
+            
+            for(var i in records){
+              //扫描集合
+              record = records[i]
+              datasets_label.add(record[0])
+            }
+
+            var tag = false
+
+            for(let item of datasets_label){ 
+              var datasets_data = {}
+              datasets_data.label = item
+              datasets_data.backgroundColor = 'rgba(60,141,188,0.9)'
+              datasets_data.borderColor = 'rgba(60,141,188,0.8)'
+              datasets_data.pointColor = '#3b8bba'
+              datasets_data.pointStrokeColor = 'rgba(60,141,188,1)'
+              datasets_data.pointHighlightFill = '#fff'
+              datasets_data.pointHighlightStroke = 'rgba(60,141,188,1)'
+              datasets_data.data = []
+
+              for(var j in records){
+                record = records[j]
+
+                if (record[0] == item){
+                  datasets_data.data.push(record[1])
+                  if(tag == false){
+                    var date_data = (new Date(record[2])).getTime();
+                    var date = new Date(date_data).toTimeString()
+
+                    timeLabels.push(date) //添加底部label
+                  }
+                }
+                
+              }
+              
+              datasets_data.data = datasets_data.data.slice(1,15)
+              timeLabels = timeLabels.slice(1,15)
+              console.log("aa99"+timeLabels)
+              console.log("aa99"+datasets_data.data)
+              tag = true
+              datasets.push(datasets_data)
+            }
+            
+            lineChartData.labels = timeLabels  //底部标签的赋值
+            lineChartData.datasets = datasets
+            /////////
+            var lineChartOptions = {
+              maintainAspectRatio : false,
+              responsive : true,
+              legend: {
+                display: true
+              },
+              scales: {
+                xAxes: [{
+                  // type:'time',
+                  gridLines : {
+                    display : false,
+                  }
+                }],
+                yAxes: [{
+                  gridLines : {
+                    display : false,
+                  }
+                }]
+              }
+            }
+
+
+            //-------------
+            //- LINE CHART -
+            //--------------
+
+            var lineChartCanvas = $(`#lineChart-${did.toString()}`).get(0).getContext('2d')
+            lineChartData.datasets[0].fill = false;
+            lineChartData.datasets[1].fill = false;
+            lineChartOptions.datasetFill = false
+
+            var lineChart = new Chart(lineChartCanvas, {
+              type: 'line',
+              data: lineChartData,
+              options: lineChartOptions
+            })
+
+          }
+        },
+        error: function (data,status) {
+            alert(data.responseJSON.detail);
+        },
+      })
+    }
+
+    var didList = []
+    $.ajax({
+      url: '/user/'+sessionStorage.getItem('uid')+'/device',
+      type:"get",
+      data:null,
+      async:false,
+      beforeSend:function(request){
+        request.setRequestHeader("Authorization"," "+sessionStorage.getItem('token_type')+" "+sessionStorage.getItem('access_token'));
+      },
+      success: function (data,status) {
+        
+        didList = data.data
+        console.log(didList+"pp")
+      },
+      error: function (data,status) {
+          alert(data.responseJSON.detail);
+      },
+    });
+    
+    for(var i = didList.length -1;i>=0;i--){
+      createDataCard(didList[i])
+      generateDataModel(didList[i])
+    }
+  </script>
 </body>
 </html>
